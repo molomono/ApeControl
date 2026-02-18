@@ -4,7 +4,7 @@ from .base_controller import BaseController
 class SimpleFFFBControl(BaseController):
     def __init__(self, config):
         super().__init__(config)
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+
 
         # Feed-forward control parameters
         self.k_ss = config.getfloat('k_ss', 0.0)    # Feed-forward steady state gain
@@ -13,6 +13,8 @@ class SimpleFFFBControl(BaseController):
         
         self.fb_enable = config.getboolean('fb_enable', True)   # Feedback gain
         
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+
         # Internal state for derivative calculation
         self.target_deriv = 0.0
         self.prev_filtered_target_deriv = 0.0
