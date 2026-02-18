@@ -79,7 +79,7 @@ class PPControl(BaseController):
 
         # Handle state transitions when target changes mid-coast (only if target actually changed)
         if self.state in ["coast_up", "coast_down"] and target_changed:
-            self._transition("regulate", read_time)
+            self._transition("regulate", 0.0)  # Force transition to regulate, allowing min duration to be met for min/max state changes
 
         # State Dispatch: executes the logic for the current state and returns the power level
         if self.state == "regulate":
@@ -147,7 +147,6 @@ class PPControl(BaseController):
         elif error < -self.t_delta_regulate:  # Temp too far above target
             self._transition("min_power", read_time)
             return 0.0
-        
 
     def _state_min_power(self, error, duration, read_time):
         """Min power state: reduce power when overshot"""
