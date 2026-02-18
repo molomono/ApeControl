@@ -2,9 +2,9 @@ from .base_controller import BaseController
 
 
 class PPControl(BaseController):
-    def __init__(self, config, pid_self):
+    def __init__(self, config):
         # Initialize the base (hijacks Klipper)
-        super().__init__(config, pid_self)
+        super().__init__(config)
         
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
