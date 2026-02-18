@@ -21,9 +21,6 @@ class LeadLagControl(BaseController):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
         
-        # Register the ready handler to perform the hijack after Klipper is fully initialized
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
-        
         # Load compensator parameters
         self.k_lead = config.getfloat('k_lead', 1.0)
         self.k_lag = config.getfloat('k_lag', 0.1)
@@ -38,6 +35,9 @@ class LeadLagControl(BaseController):
         
         # Reference temperature
         self.t_ref = 0.0
+
+        # Register the ready handler to perform the hijack after Klipper is fully initialized
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
     def handle_ready(self):
         self.install_hijack()
@@ -99,7 +99,6 @@ class LeadLagControl(BaseController):
         self.prev_error = error
         self.prev_output = total_output
         
-
         
         logging.info("Lead-Lag: error=%.2f, lead=%.3f, lag=%.3f, ff=%.3f, output=%.3f" % 
                     (error, lead_term, lag_term, ff_term, total_output))
