@@ -13,16 +13,16 @@ class PPControl(BaseController):
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control"""
-        error = target_temp - temp
+        #error = target_temp - temp
         
         # 1. Nonlinear State Selection
         # Slew State (Full Power)
-        if error > (self.t_overshoot + 1.0):
-            return 1.0
+        #if error > (self.t_overshoot + 1.0):
+        #    return 1.0
             
         # Coast State (Zero Power to bleed momentum)
-        if 0 < error <= self.t_overshoot:
-            return 0.0
+        #if 0 < error <= self.t_overshoot:
+        #    return 0.0
             
         # 2. Regulate State (FF + FB)
         u_ff_ss = target_temp * self.k_ss

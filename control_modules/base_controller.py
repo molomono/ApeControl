@@ -23,6 +23,7 @@ class BaseController(ABC):
         try:
             # We pass pid_self (the ControlPID instance) into the architecture here
             new_pwm = self.compute_control(pid_self, read_time, temp, target_temp)
+            new_pwm = max(0.0, min(1.0, new_pwm))  # Clamp between 0 and 1
             pid_self.heater.set_pwm(read_time, new_pwm)
         except Exception as e:
             # Safety Fallback: hand keys back to original PID
