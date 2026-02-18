@@ -6,10 +6,16 @@ class PPControl(BaseController):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
         
+        # Register the ready handler to perform the hijack after Klipper is fully initialized
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+        
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.t_overshoot = config.getfloat('t_overshoot', 0.0)
         self.k_flow = config.getfloat('k_flow', 0.0)
+
+    def handle_ready(self):
+        self.install_hijack()
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control"""
