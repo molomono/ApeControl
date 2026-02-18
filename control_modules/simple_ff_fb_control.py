@@ -43,13 +43,15 @@ class SimpleFFFBControl(BaseController):
             self.alpha = self.t_filter / (self.t_filter + min_deriv_time)
 
         target_deriv_filtered = self.alpha * self.prev_filtered_target_deriv + (1 - self.alpha) * self.target_deriv
-            
+
         # Actual control law u_ff = k_ss*r + k_dy*dr/dt, k_dy = tau*k_ss
         u_ff = self.k_ss * (target_temp + self.tau * target_deriv_filtered)
 
         self.prev_filtered_target_deriv = target_deriv_filtered
         self.prev_target = target_temp
         
+        logging.info("Simple-FF-FB-Control: r: %.3f, r_df: %.3f, u_ff: %.3f, alpha: %.3f" % (target_temp, self.target_deriv, u_ff, self.alpha))
+
         # If feedback is enabled, we add the original PID output to our feed-forward term.
         if self.fb_enable:
             return u_ff + self.captured_fb_pwm
