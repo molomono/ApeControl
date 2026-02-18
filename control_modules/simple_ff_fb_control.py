@@ -38,8 +38,8 @@ class SimpleFFFBControl(BaseController):
             self.target_deriv = target_diff / time_diff
             self.alpha = self.t_filter / (self.t_filter + time_diff)
         else:
-            self.target_deriv = (target_diff * (self.min_deriv_time-time_diff)
-                          + target_diff) / self.min_deriv_time
+            self.target_deriv = (target_diff * (min_deriv_time-time_diff)
+                          + target_diff) / min_deriv_time
             self.alpha = self.t_filter / (self.t_filter + min_deriv_time)
 
         target_deriv_filtered = self.alpha * self.prev_filtered_target_deriv + (1 - self.alpha) * self.target_deriv
