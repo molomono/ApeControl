@@ -22,10 +22,10 @@ class BaseController(ABC):
     def monkey_patch_update(self, pid_self, read_time, temp, target_temp):
         try:
             real_set_pwm = pid_self.heater.set_pwm
-            captured_pid_pwm = [0.0]
+            self.captured_pid_pwm = [0.0]
             def dummy_set_pwm(tm, value):
-                captured_pid_pwm[0] = value
-            self.get_pwm = lambda: captured_pid_pwm[0]
+                self.captured_pid_pwm[0] = value
+            
             pid_self.heater.set_pwm = dummy_set_pwm
 
             # We pass pid_self (the ControlPID instance) into the architecture here
