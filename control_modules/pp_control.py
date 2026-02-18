@@ -20,9 +20,11 @@ class PPControl(BaseController):
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control"""
         #error = target_temp - temp
-        
+        # Call the original PID control method to capture the PWM (dummy funcion active during method we are in)
+        self.orig_temp_update(read_time, temp, target_temp)
+
         # Get the captured PID PWM from the original controller
-        u_fb_pid = self.captured_pid_pwm[0]
+        u_fb_pid = self.captured_fb_pwm
 
         # 1. Nonlinear State Selection
         # Slew State (Full Power)
