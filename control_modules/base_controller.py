@@ -23,7 +23,7 @@ class BaseController(ABC):
     def monkey_patch_update(self, pid_self, read_time, temp, target_temp):
         try:
             # Store the original set_pwm method for later
-            real_set_pwm = pid_self.heater.set_pwm
+            self.real_set_pwm = pid_self.heater.set_pwm
 
             # Override set_pwm to capture the PID's computed PWM value without sending it to the heater
             def dummy_set_pwm(tm, value):
@@ -34,9 +34,8 @@ class BaseController(ABC):
             new_pwm = self.compute_control(pid_self, read_time, temp, target_temp)
             new_pwm = max(0.0, min(1.0, new_pwm))  # Clamp between 0 and 1
             
-            # Restore the original set_pwm
-            pid_self.heater.set_pwm = real_set_pwm
-
+            # Restore the original set_pwm and set the Pwm
+            pid_self.heater.set_pwm = self.real_set_pwm
             pid_self.heater.set_pwm(read_time, new_pwm)
 
         except Exception as e:
