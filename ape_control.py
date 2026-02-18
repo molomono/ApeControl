@@ -1,3 +1,5 @@
+import logging
+
 class ApeControl:
     def __init__(self, config):
         self.printer = config.get_printer()

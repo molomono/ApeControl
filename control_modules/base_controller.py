@@ -2,76 +2,33 @@ import logging
 from abc import ABC, abstractmethod
 
 class BaseController(ABC):
-    def __init__(self, config, pid_self):
+    def __init__(self, config):
         self.printer = config.get_printer()
-        self.pid_self = pid_self
         self.heater_name = config.get_name().split()[-1]
-        self.max_power = config.getfloat('max_power', 1.0, minval=0.0, maxval=1.0)
+        self.target_heater = None # To be found during Klipper's 'ready' state
+
+    def install_hijack(self):
+        # 1. Find the actual Klipper heater object
+        pheater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        # 2. Find the ControlPID instance inside that heater
+        self.target_heater = pheater.cooling_fan.speed_func.__self__ # Common way to grab the PID obj
         
-        # Internal state for monkey-patch capture
-        self._captured_pid_pwm = 0.0
+        # 3. Save the original method
+        self.orig_temp_update = self.target_heater.temperature_update
         
-        # Initialize Monkey-Patch
-        self._setup_hijack()
+        # 4. Perform the Monkey Patch
+        self.target_heater.temperature_update = self.monkey_patch_update
 
-    def _setup_hijack(self):
-        # 1. Store the original methods
-        self.orig_temp_update = self.pid_self.temperature_update
-        self.orig_set_pwm = self.pid_self.heater.set_pwm
-
-        # 2. Inject our interception logic
-        self.pid_self.temperature_update = self._hijacked_temp_update
-        logging.info(f"ApeControl: Hijacked {self.heater_name} temperature_update")
-
-    def _hijacked_temp_update(self, read_time, temp, target_temp):
-        """The entry point for every heater tick (usually 2Hz)"""
+    def monkey_patch_update(self, pid_self, read_time, temp, target_temp):
         try:
-            # A. Temporarily redirect set_pwm to capture the PID intent
-            self.pid_self.heater.set_pwm = self._capture_pwm
-            
-            # B. Run the original Klipper PID math
+            # We pass pid_self (the ControlPID instance) into the architecture here
+            new_pwm = self.compute_control(pid_self, read_time, temp, target_temp)
+            pid_self.heater.set_pwm(read_time, new_pwm)
+        except Exception as e:
+            # Safety Fallback: hand keys back to original PID
             self.orig_temp_update(read_time, temp, target_temp)
             
-            # C. Hand off to the specific control architecture (PPControl, etc)
-            # We restore the original set_pwm first so the child can use it
-            self.pid_self.heater.set_pwm = self.orig_set_pwm
-            
-            disturbances = self._get_disturbances(read_time)
-            final_pwm = self.compute_control(read_time, temp, target_temp, disturbances)
-            
-            # D. Apply final clamped power
-            clamped_pwm = max(0.0, min(self.max_power, final_pwm))
-            self.pid_self.heater.set_pwm(read_time, clamped_pwm)
-
-        except Exception as e:
-            # SAFETY FALLBACK: If our logic crashes, restore Klipper defaults
-            logging.error(f"ApeControl Error in {self.heater_name}: {str(e)}")
-            self._handle_fallback(read_time, temp, target_temp)
-
-    def _capture_pwm(self, read_time, value):
-        """Captures what the PID loop wanted to do"""
-        self._captured_pid_pwm = value
-
-    def _handle_fallback(self, read_time, temp, target_temp):
-        """Emergency restoration of native Klipper control"""
-        self.pid_self.temperature_update = self.orig_temp_update
-        self.pid_self.heater.set_pwm = self.orig_set_pwm
-        self.pid_self.temperature_update(read_time, temp, target_temp)
-        logging.warning("ApeControl: Emergency fallback to native PID engaged.")
-
-    def _get_disturbances(self, read_time):
-        """Helper to gather system state for the controller"""
-        # Example: Look up extruder velocity
-        extruder = self.printer.lookup_object('extruder')
-        e_vel = extruder.get_status(read_time).get('velocity', 0.0)
-        
-        return {
-            'e_velocity': e_vel,
-            'volumetric_flow': e_vel * 2.405, # Assumes 1.75mm
-            'pid_pwm': self._captured_pid_pwm
-        }
-
     @abstractmethod
-    def compute_control(self, read_time, temp, target_temp, disturbances):
-        """Sub-classes implement their math here"""
+    def compute_control(self, pid_self, read_time, temp, target_temp):
+        """Math goes here in the child class"""
         pass

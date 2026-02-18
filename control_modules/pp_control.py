@@ -11,10 +11,9 @@ class PPControl(BaseController):
         self.t_overshoot = config.getfloat('t_overshoot', 0.0)
         self.k_flow = config.getfloat('k_flow', 0.0)
 
-    def compute_control(self, read_time, temp, target_temp, disturbances):
+    def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control"""
         error = target_temp - temp
-        pid_intent = disturbances['pid_pwm']
         
         # 1. Nonlinear State Selection
         # Slew State (Full Power)
@@ -27,7 +26,6 @@ class PPControl(BaseController):
             
         # 2. Regulate State (FF + FB)
         u_ff_ss = target_temp * self.k_ss
-        u_ff_flow = disturbances['volumetric_flow'] * self.k_flow
-        
+      
         # We add the original PID logic (Feedback) to our Feed-Forward terms
-        return pid_intent + u_ff_ss + u_ff_flow
+        return pid_self.get_pwm() + u_ff_ss
