@@ -39,7 +39,10 @@ class BaseController(ABC):
             logging.info("Error in compute_control: %s. Falling back to original PID." % str(e))
             # Safety Fallback: hand keys back to original PID
             self.orig_temp_update(read_time, temp, target_temp)
-            
+    
+    def get_pid_pwm(self):
+        return self.captured_pid_pwm[0]
+
     @abstractmethod
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """Math goes here in the child class"""
