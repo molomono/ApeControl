@@ -9,6 +9,13 @@ class ApeControl:
         if arch_type == 'pp_control':
             from .control_modules.pp_control import PPControl
             self.controller = PPControl(config)
-        
+        elif arch_type == 'ss_ff_gain':
+            from .control_modules.ss_ff_gain import SSFFControl
+            self.controller = SSFFControl(config)
+        else:
+            logging.error("Unknown architecture type specified: %s. Defaulting to PP-Control." % arch_type)
+            from .control_modules.pp_control import PPControl
+            self.controller = PPControl(config)
+
 def load_config_prefix(config):
     return ApeControl(config)
