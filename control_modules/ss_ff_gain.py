@@ -11,7 +11,7 @@ class SSFFControl(BaseController):
         
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
-        self.fb_enabled   = config.getboolean('fb_enabled', True)
+        self.fb_enable   = config.getboolean('fb_enable', True)
 
     def handle_ready(self):
         self.install_hijack()
@@ -19,7 +19,7 @@ class SSFFControl(BaseController):
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """Example of a simple Static State Feed-Forward gain with optional feedback from the original PID controller"""
         # If feedback is enabled, we call the original PID to capture its PWM output.
-        if self.fb_enabled:
+        if self.fb_enable:
             self.orig_temp_update(read_time, temp, target_temp)
         
         # Get the captured PID PWM from the original controller 0 if feedback disabled.
