@@ -21,9 +21,18 @@ class BaseController(ABC):
 
     def monkey_patch_update(self, pid_self, read_time, temp, target_temp):
         try:
+            real_set_pwm = pid_self.heater.set_pwm
+            captured_pid_pwm = [0.0]
+            def dummy_set_pwm(tm, value):
+                captured_pid_pwm[0] = value
+            self.get_pwm = lambda: captured_pid_pwm[0]
+            pid_self.heater.set_pwm = dummy_set_pwm
+
             # We pass pid_self (the ControlPID instance) into the architecture here
             new_pwm = self.compute_control(pid_self, read_time, temp, target_temp)
             new_pwm = max(0.0, min(1.0, new_pwm))  # Clamp between 0 and 1
+
+            pid_self.heater.set_pwm = real_set_pwm
             pid_self.heater.set_pwm(read_time, new_pwm)
 
         except Exception as e:
