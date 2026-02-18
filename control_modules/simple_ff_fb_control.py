@@ -8,7 +8,7 @@ class SimpleFFFBControl(BaseController):
 
         # Feed-forward control parameters
         self.k_ss = config.getfloat('k_ss', 0.0)    # Feed-forward steady state gain
-        self.tau = config.getfloat('tau', 0.0)      # Time Delta heater (seconds in T until 63% of target temp is reached)
+        self.tau = config.getfloat('tau', 20.0)      # Time Delta heater (seconds in T until 63% of target temp is reached)
         self.t_filter = config.getfloat('t_filter', 0.025)    # filter time constant
         
         self.fb_enable = config.getboolean('fb_enable', True)   # Feedback gain
