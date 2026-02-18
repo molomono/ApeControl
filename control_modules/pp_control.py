@@ -25,6 +25,9 @@ class PPControl(BaseController):
         self.t_delta_regulate = config.getfloat('t_delta_regulate', 5.0)
         self.min_regulation_duration = config.getfloat('min_duration', 5.0) # Minimum duration to stay in a state before transitioning (prevents chatter)
 
+        # On off switch for feed-back control
+        self.fb_enable = config.getboolean('fb_enable', True)
+
         ## State Machine State
         self.state = "off"
         self.last_state_change = 0.0
