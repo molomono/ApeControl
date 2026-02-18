@@ -11,26 +11,25 @@ class BaseController(ABC):
         # 1. Find the actual Klipper heater object
         pheater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
         # 2. Find the ControlPID instance inside that heater
-        self.target_heater = pheater.cooling_fan.speed_func.__self__ # Grab the PID obj
+        self.target_heater = pheater.control
         
         # 3. Save the original method
         self.orig_temp_update = self.target_heater.temperature_update
         
-        # Define the new method that will replace the original temperature update
-        def monkey_patch_update(pid_self, read_time, temp, target_temp):
-            try:
-                # We pass pid_self (the ControlPID instance) into the architecture here
-                new_pwm = self.compute_control(pid_self, read_time, temp, target_temp)
-                new_pwm = max(0.0, min(1.0, new_pwm))  # Clamp between 0 and 1
-                pid_self.heater.set_pwm(read_time, new_pwm)
-
-            except Exception as e:
-                logging.info("Error in compute_control: %s. Falling back to original PID." % str(e))
-                # Safety Fallback: hand keys back to original PID
-                self.orig_temp_update(read_time, temp, target_temp)
-
         # 4. Perform the Monkey Patch
-        self.target_heater.temperature_update = self.monkey_patch_update
+        self.target_heater.temperature_update = lambda read_time, temp, target_temp: self.monkey_patch_update(self.target_heater, read_time, temp, target_temp)
+
+    def monkey_patch_update(self, pid_self, read_time, temp, target_temp):
+        try:
+            # We pass pid_self (the ControlPID instance) into the architecture here
+            new_pwm = self.compute_control(pid_self, read_time, temp, target_temp)
+            new_pwm = max(0.0, min(1.0, new_pwm))  # Clamp between 0 and 1
+            pid_self.heater.set_pwm(read_time, new_pwm)
+
+        except Exception as e:
+            logging.info("Error in compute_control: %s. Falling back to original PID." % str(e))
+            # Safety Fallback: hand keys back to original PID
+            self.orig_temp_update(read_time, temp, target_temp)
             
     @abstractmethod
     def compute_control(self, pid_self, read_time, temp, target_temp):
