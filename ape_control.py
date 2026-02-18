@@ -15,7 +15,7 @@ class ApeControl:
         elif arch_type == 'lead_lag_control':
             from .control_modules.lead_lag_control import LeadLagControl
             self.controller = LeadLagControl(config)
-        elif arch_type == '':
+        elif arch_type == 'simple_ff_fb_control':
             from .control_modules.simple_ff_fb_control import SimpleFFFBControl
             self.controller = SimpleFFFBControl(config)
         else:
