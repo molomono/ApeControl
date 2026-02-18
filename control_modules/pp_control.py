@@ -1,4 +1,4 @@
-from base_controller import BaseController
+from .base_controller import BaseController
 
 
 class PPControl(BaseController):
