@@ -23,6 +23,7 @@ class PPControl(BaseController):
 
         # Regulation max error window
         self.t_delta_regulate = config.getfloat('t_delta_regulate', 5.0)
+        self.min_regulation_duration = config.getfloat('min_duration', 5.0) # Minimum duration to stay in a state before transitioning (prevents chatter)
 
         ## State Machine State
         self.state = "off"
@@ -132,7 +133,7 @@ class PPControl(BaseController):
 
     def _state_regulate(self, error, duration, read_time, pid_self=None):
         """Regulate state: maintain temperature with feedback control"""
-        if abs(error) < self.t_delta_regulate: # Temp within regulation window 
+        if abs(error) < self.t_delta_regulate or duration < self.min_regulation_duration: # Temp within regulation window or min duration not met
             return self.ff_fb_control(pid_self,read_time)
         elif error > self.t_delta_regulate:  # Temp too far below target
             self._transition("max_power", read_time)
