@@ -27,6 +27,7 @@ class BaseController(ABC):
             pid_self.heater.set_pwm(read_time, new_pwm)
 
         except Exception as e:
+            logging.info("Error in compute_control: %s. Falling back to original PID." % str(e))
             # Safety Fallback: hand keys back to original PID
             self.orig_temp_update(read_time, temp, target_temp)
             
