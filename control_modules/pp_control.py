@@ -32,7 +32,7 @@ class PPControl(BaseController):
             
         # 2. Regulate State (FF + FB)
         u_ff_ss = target_temp * self.k_ss
-        u_fb_pid = self.get_pwm()
+        u_fb_pid = self.get_pid_pwm()
         logging.info("PP-Control: PID_PWM: %s, FFC_PWM: %s" % (u_fb_pid, u_ff_ss))
         # We add the original PID logic (Feedback) to our Feed-Forward terms
         return u_fb_pid + u_ff_ss
