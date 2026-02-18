@@ -5,7 +5,7 @@ class ApeControl:
         
         # Logic to dynamically load from the ape_modules folder
         if arch_type == 'pp_control':
-            from .control_modules import PPControl
+            from .control_modules.pp_control import PPControl
             self.controller = PPControl(config)
         
 def load_config_prefix(config):
