@@ -58,13 +58,17 @@ Control Architectures
 
 
 ### Quick side note on hybrid feedback-feedforward control:
-Feedback controllers and feedforward controllers can be combined for hybrid control strategies. This generally comes with some benefits including faster transients (settling times), lower overshoot, and more responsive disturbance rejection. This also is the fundimental motivation underpinning this repository. Giving birth to the original PP-Control architecture, which combines Feed-Forward Compensation in the form of Proactive Power adjustments. In addition to the Monkey-Patch abstraction layer which makes developing new control algorithms for klipper a relatively simple endeavor.
+Feedback controllers and feedforward controllers can be combined for hybrid control strategies. This generally comes with some benefits including faster transients (settling times), lower overshoot, and more responsive disturbance rejection. This also is the fundimental motivation underpinning this repository. Giving birth to the original PP-Control architecture, which combines Feed-Forward Compensation in the form of Proactive Power adjustments. In addition to the Monkey-Patch abstraction layer which makes developing new control algorithms for klipper a relatively simple endeavor. 
+
+Although not implemented at this time, a modular structure that allows choosing and tuning FF and FB control algorithms from the printer.cfg file is a desireable direction. I would rather provide users too much power than too little, this does come with risks and keep that in mind.
 
 Disclaimer
 ---
 ### ApeControl involves the manipulation of heater safety logic. 
 
-While the framework includes safety fallbacks, it is intended for users who have experience with 3D printers and control tuning. Always monitor your printer after installing new control architectures and **ensure your max_temp and verify_heater settings are correctly configured in Klipper.**
+While the framework includes safety fallbacks, it is intended for users who have experience with 3D printers and control tuning. 
+
+**Always monitor your printer after installing new control architectures and ensure your max_temp and verify_heater settings are correctly configured in Klipper.**
 
 ---
 License: GPL-3.0
