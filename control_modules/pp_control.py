@@ -94,13 +94,13 @@ class PPControl(BaseController):
         u_fb_pid = self.captured_fb_pwm
         u_ff = self.t_ref * self.k_ss  # Feed-forward based on target temperature
         
-        logging.info("Regulate State: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
+        logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
         return u_fb_pid + u_ff
 
     def _transition(self, next_state, read_time):
         """Transition to a new state and log the change"""
         if self.state != next_state:
-            logging.info("[%.3f] State transition: %s -> %s" % (read_time, self.state, next_state))
+            logging.info("[%.3f] PP-Control state transition: %s -> %s" % (read_time, self.state, next_state))
             self.state = next_state
             self.last_state_change = read_time
 
