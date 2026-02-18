@@ -8,7 +8,8 @@ class PPControl(BaseController):
         
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
-        
+        self.part_fan = self.printer.lookup_object('fan')
+
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.k_fan = config.getfloat('k_fan', 0.0)
@@ -21,7 +22,7 @@ class PPControl(BaseController):
         self.coast_time_down = config.getfloat('coast_time_down', 0.0)
 
         # Regulation max error window
-        self.t_delta_regulate = config.getfloat('t_delta_regulate', 2.0)
+        self.t_delta_regulate = config.getfloat('t_delta_regulate', 5.0)
 
         ## State Machine State
         self.state = "off"
@@ -85,7 +86,7 @@ class PPControl(BaseController):
         return power_output
     
 
-    def ff_fb_control(self, pid_self):
+    def ff_fb_control(self, pid_self, read_time):
         """Combine feed-forward and feedback control in regulate state
         
         Args:
@@ -95,7 +96,10 @@ class PPControl(BaseController):
             Combined PWM value (feed-forward + captured PID feedback)
         """
         u_fb_pid = self.captured_fb_pwm
-        u_ff = self.t_ref * self.k_ss  # Feed-forward based on target temperature
+        
+        fan_speed = self.part_fan.get_status(read_time)['speed']
+
+        u_ff = self.t_ref * self.k_ss + fan_speed * self.k_fan  # Feed-forward steady state gain computation.
         
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
         return u_fb_pid + u_ff
@@ -129,7 +133,7 @@ class PPControl(BaseController):
     def _state_regulate(self, error, duration, read_time, pid_self=None):
         """Regulate state: maintain temperature with feedback control"""
         if abs(error) < self.t_delta_regulate: # Temp within regulation window 
-            return self.ff_fb_control(pid_self)
+            return self.ff_fb_control(pid_self,read_time)
         elif error > self.t_delta_regulate:  # Temp too far below target
             self._transition("max_power", read_time)
             return 1.0
