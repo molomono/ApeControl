@@ -128,15 +128,15 @@ class PPControl(BaseController):
 
     def _state_regulate(self, error, duration, read_time, pid_self=None):
         """Regulate state: maintain temperature with feedback control"""
-        if error < -self.t_delta_regulate:
+        if error > self.t_delta_regulate:  # Temp too far below target
             self._transition("max_power", read_time)
-        elif error > self.t_delta_regulate:
+        elif error < -self.t_delta_regulate:  # Temp too far above target
             self._transition("min_power", read_time)
         return self.ff_fb_control(pid_self)
 
     def _state_min_power(self, error, duration, read_time):
         """Min power state: reduce power when overshot"""
-        if error > self.t_overshoot_down:
+        if error > -self.t_overshoot_down:  # Error approaching zero from below
             self._transition("coast_down", read_time)
         return 0.0
 
