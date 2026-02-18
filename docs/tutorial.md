@@ -72,20 +72,19 @@ class MyControl(BaseController):
         return output  # Base class handles clamping
 ```
 
-### Step 2: Make your class visible 
+### Step 2: Register with ApeControl in ape_control.py
 
-### A. Visibility to klipper configuration: Add to ape_control.py
+Add your controller to the match-case statement:
+
 ```python
-case 'my_control':
+elif arch_type == 'my_control':
     from .control_modules.my_control import MyControl
     self.controller = MyControl(config)
 ```
-Add inside the match-case statement.
 
-### B. Visibility to klippy as a python module: Add line to control_modules/__init__.py
-```python
-from .my_control import MyControl
-```
+This is the **only file you need to modify** for your controller to work.
+
+*(Optional: You can also add `from .my_control import MyControl` to `control_modules/__init__.py` for convenience, but this is not required.)*
 
 ### Step 3: Configure in printer.cfg
 
