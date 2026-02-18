@@ -8,7 +8,7 @@ class SimpleFFFBControl(BaseController):
 
         # Feed-forward control parameters
         self.k_ss = config.getfloat('k_ss', 0.0)    # Feed-forward steady state gain
-        self.tau = config.getfloat('tau', 20.0)      # Time Delta heater (seconds in T until 63% of target temp is reached)
+        self.tau = config.getfloat('tau', 40.0)      # Time Delta heater (seconds in T until 63% of target temp is reached)
         self.t_filter = config.getfloat('t_filter', 0.025)    # filter time constant
         
         self.fb_enable = config.getboolean('fb_enable', True)   # Feedback gain
@@ -30,6 +30,9 @@ class SimpleFFFBControl(BaseController):
         self.orig_temp_update(read_time, temp, target_temp)
         
         target_diff = target_temp - self.prev_target
+        if target_diff != 0: # If target changes, we overwrite the previous target derivative to saturate the derivative term.
+            self.prev_filtered_target_deriv = target_diff
+            
         # Pulling necissary variables into the function scope for readability
         time_diff = read_time - pid_self.prev_temp_time
         min_deriv_time = pid_self.min_deriv_time
