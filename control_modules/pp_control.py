@@ -1,5 +1,5 @@
+import logging
 from .base_controller import BaseController
-
 
 class PPControl(BaseController):
     def __init__(self, config):
@@ -26,6 +26,7 @@ class PPControl(BaseController):
             
         # 2. Regulate State (FF + FB)
         u_ff_ss = target_temp * self.k_ss
-      
+        u_fb_pid = self.get_pwm()
+        logging.info("PP-Control: PID_PWM: %s, FFC_PWM: %s" % (u_fb_pid, u_ff_ss))
         # We add the original PID logic (Feedback) to our Feed-Forward terms
-        return pid_self.get_pwm() + u_ff_ss
+        return u_fb_pid + u_ff_ss
