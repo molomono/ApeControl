@@ -52,6 +52,9 @@ class PPControl(BaseController):
             temp: Current temperature reading
             target_temp: Target temperature (same as pid_self.t_ref after PID update)
         """
+        # Check if target changed before updating
+        target_changed = (target_temp != self.t_ref)
+        
         # Sync local reference with PID target
         self.t_ref = target_temp
         
@@ -69,8 +72,8 @@ class PPControl(BaseController):
         error = target_temp - temp
         duration = read_time - self.last_state_change
 
-        # Handle state transitions when target changes mid-coast
-        if self.state in ["coast_up", "coast_down"]:
+        # Handle state transitions when target changes mid-coast (only if target actually changed)
+        if self.state in ["coast_up", "coast_down"] and target_changed:
             self._transition("regulate", read_time)
 
         # State Dispatch: executes the logic for the current state and returns the power level
