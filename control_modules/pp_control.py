@@ -106,7 +106,10 @@ class PPControl(BaseController):
         u_ff = self.t_ref * self.k_ss + fan_speed * self.k_fan  # Feed-forward steady state gain computation.
         
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
-        return u_fb_pid + u_ff
+        if not self.fb_enable:
+            return u_ff
+        else:           
+            return u_fb_pid + u_ff
 
     def _transition(self, next_state, read_time):
         """Transition to a new state and log the change"""
