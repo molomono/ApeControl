@@ -116,8 +116,9 @@ class PPControl(BaseController):
         # Feed forward control logic
         u_ff = (self.t_ref - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan  
 
-
+        move_speed = self.gcode_move.get_status()['speed']
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
+        logging.info("PP-Control move-queue: x %s, y %s, z %s, e %s" % (move_speed[0], move_speed[1], move_speed[2], move_speed[3]))
         if not self.fb_enable:
             return u_ff
         else:           
