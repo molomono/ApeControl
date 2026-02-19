@@ -8,12 +8,15 @@ class PPControl(BaseController):
         
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
+        # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
+        self.print_stats = self.printer.lookup_object('print_stats')
 
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.k_fan = config.getfloat('k_fan', 0.0)
         self.k_flow = config.getfloat('k_flow', 0.0)
+        self.dt_first_layer = config.getfloat('dt_first_layer', 1.5)
 
         # Switching Logic Parameters
         self.t_overshoot_up = config.getfloat('t_overshoot_up', 0.0)
@@ -102,9 +105,15 @@ class PPControl(BaseController):
         u_fb_pid = self.captured_fb_pwm
         
         fan_speed = self.part_fan.get_status(read_time)['speed']
+        try:
+            is_first_layer = self.print_stats.get_status(read_time)['first_layer'] <= 1
+        except:
+            is_first_layer = 0.0
+    
+        # Feed forward control logic
+        u_ff = (self.t_ref - self.dt_first_layer*is_first_layer) * self.k_ss + fan_speed * self.k_fan  
 
-        u_ff = self.t_ref * self.k_ss + fan_speed * self.k_fan  # Feed-forward steady state gain computation.
-        
+
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
         if not self.fb_enable:
             return u_ff
