@@ -118,7 +118,7 @@ class PPControl(BaseController):
 
         move_speed = self.gcode_move.get_status()['speed']
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
-        logging.info("PP-Control move-queue: x %s, y %s, z %s, e %s" % (move_speed[0], move_speed[1], move_speed[2], move_speed[3]))
+        logging.info("PP-Control move-queue: %s" % (move_speed))
         if not self.fb_enable:
             return u_ff
         else:           
