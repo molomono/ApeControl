@@ -122,7 +122,7 @@ class PPControl(BaseController):
         u_ff = (self.t_ref - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + self.e_velocity_filtered * self.k_ev
 
         
-        logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
+        logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s, FF_ev" % (u_fb_pid, u_ff, self.e_velocity_filtered * self.k_ev))
 
         if not self.fb_enable:
             return u_ff
