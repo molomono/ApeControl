@@ -16,7 +16,7 @@ class PPControl(BaseController):
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.k_fan = config.getfloat('k_fan', 0.0)
-        self.k_flow = config.getfloat('k_flow', 0.0)
+        self.k_ev = config.getfloat('k_ev', 0.0)
         self.dt_first_layer = config.getfloat('dt_first_layer', 1.5)
 
         # Switching Logic Parameters
@@ -105,7 +105,9 @@ class PPControl(BaseController):
         """
         u_fb_pid = self.captured_fb_pwm
         
+        # Access Feed Forward inputs
         fan_speed = self.part_fan.get_status(read_time)['speed']
+        e_velocity = self.printer.lookup_object('motion_report').get_status(read_time)['live_extruder_velocity'] # realtime, we can also use look-ahead in later versions
         z_position = self.gcode_move.get_status()['position'][2]
         if z_position < 0.3:
             fist_layer_compensation = self.dt_first_layer
@@ -113,12 +115,10 @@ class PPControl(BaseController):
             fist_layer_compensation = 0.0
 
         # Feed forward control logic
-        u_ff = (self.t_ref - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan  
+        u_ff = (self.t_ref - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + e_velocity * self.k_ev
 
         
-        actual_velocity = self.printer.lookup_object('motion_report').get_status(read_time)['live_extruder_velocity']
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
-        logging.info("PP-Control velocity: %s, z_position: %s" % (actual_velocity, z_position))
 
         if not self.fb_enable:
             return u_ff

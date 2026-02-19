@@ -20,6 +20,8 @@ class BaseController(ABC):
         # 4. Perform the Monkey Patch
         self.target_heater.temperature_update = lambda read_time, temp, target_temp: self.monkey_patch_update(self.target_heater, read_time, temp, target_temp)
 
+        # 5. TODO: Overwrite PID values... (this is to allow the original PID controller to remain configured as a backup if we retune PID after FF compensation)
+
     def monkey_patch_update(self, pid_self, read_time, temp, target_temp):
         try:
             # Store the original set_pwm method for later
@@ -40,8 +42,12 @@ class BaseController(ABC):
 
         except Exception as e:
             logging.info("Error in compute_control: %s. Falling back to original PID." % str(e))
+            # TODO: PID values can be overwritten with ApeControl module, restore original PID behavior before handing it back to the original function.
+
             # Safety Fallback: hand keys back to original PID
-            self.orig_temp_update(read_time, temp, target_temp)
+            pid_self.heater.set_pwm = self.real_set_pwm # Remove the dummy function, makes the heater-set_pwm function write to the heater again
+            self.orig_temp_update(read_time, temp, target_temp) # Call original PID logic
+            
 
     @abstractmethod
     def compute_control(self, pid_self, read_time, temp, target_temp):
