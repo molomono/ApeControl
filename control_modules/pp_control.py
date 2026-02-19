@@ -11,7 +11,6 @@ class PPControl(BaseController):
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
-        self.motion_report = self.printer.lookup_object('motion_report')
         #self.toolhead = self.printer.lookup_object('toolhead')
 
         # Load Architecture-specific parameters
@@ -117,7 +116,7 @@ class PPControl(BaseController):
         u_ff = (self.t_ref - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan  
 
         
-        actual_velocity = self.motion_report.get_status(read_time)['live_extruder_velocity']
+        actual_velocity = self.printer.lookup_object('motion_report').get_status(read_time)['live_extruder_velocity']
         logging.info("PP-Control Control Effort: PID_PWM: %s, FF_PWM: %s" % (u_fb_pid, u_ff))
         logging.info("PP-Control velocity: %s, z_position: %s" % (actual_velocity, z_position))
 
