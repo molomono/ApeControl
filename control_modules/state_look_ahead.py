@@ -20,25 +20,30 @@ class StateLookahead:
         # self.wrap_command('M104', 'S', 'target_temp')
 
     def wrap_command(self, cmd_name, param_name, internal_key):
-        """Hijacks an existing G-code command to log its 'future' execution time."""
+        """Hijacks an existing G-code command while preserving original IO behavior."""
+        # Use gcode.handlers.get to find the current function pointer
         prev_handler = self.gcode.handlers.get(cmd_name)
         if not prev_handler:
             return
 
         self.state_queues[internal_key] = []
 
-        def wrapper(gcmd):
+        def wrapper(gcmd, *args, **kwargs):
+            # 1. Perform our logic (Safe because it's non-blocking)
             val = gcmd.get_float(param_name, None)
             if val is not None:
-                # The time this command will actually hit the hardware
                 planned_time = self.toolhead.get_last_move_time()
                 self.state_queues[internal_key].append((planned_time, val))
-                # Sort to ensure time-consistency
                 self.state_queues[internal_key].sort()
             
-            # Execute original Klipper logic
-            prev_handler(gcmd)
+            # 2. Call original handler and capture its return value
+            # We pass through all args/kwargs to be perfectly transparent
+            res = prev_handler(gcmd, *args, **kwargs)
+            
+            # 3. Respect the original IO
+            return res
 
+        # Overwrite the handler in the live dispatch table
         self.gcode.handlers[cmd_name] = wrapper
 
     def get_state_at(self, internal_key, t_seconds, default_val):
