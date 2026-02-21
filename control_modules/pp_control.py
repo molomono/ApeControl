@@ -199,7 +199,7 @@ class PPControl(BaseController):
         
         # --- PHASE 1: Transient Analysis (Slope & Overshoot) ---
         self.gcode.respond_info("Phase 1: Measuring Rise Slope and Overshoot...")
-        heater.set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
+        self.real_set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
         
         start_time = self.printer.get_reactor().monotonic()
         start_temp = heater.get_status(start_time)['temperature']
@@ -209,7 +209,7 @@ class PPControl(BaseController):
             self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
         
         hit_target_time = self.printer.get_reactor().monotonic()
-        heater.set_pwm(hit_target_time, 0.0) # Power Off
+        self.real_set_pwm(hit_target_time, 0.0) # Power Off
         
         # Calculate Slope Up
         rise_slope = (target - start_temp) / (hit_target_time - start_time)
@@ -238,7 +238,7 @@ class PPControl(BaseController):
 
         # Steady State Test
         self.gcode.respond_info(f"Applying constant power {power*100}% for Steady-State analysis...")
-        heater.set_pwm(self.printer.get_reactor().monotonic(), power)
+        self.real_set_pwm(self.printer.get_reactor().monotonic(), power)
         
         # Wait 2 minutes for thermal equilibrium
         self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 120.0)
