@@ -6,7 +6,8 @@ class PPControl(BaseController):
     def __init__(self, config):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
-        
+
+
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
@@ -55,9 +56,11 @@ class PPControl(BaseController):
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
+        self.reactor = self.pritner.get_reactor()
 
-        #self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
-        #                            help="Calibrate ApeControl parameters")
+                
+        self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
+                                    desc="Calibrate ApeControl parameters")
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
@@ -185,16 +188,18 @@ class PPControl(BaseController):
             self._transition("regulate", read_time)
         return 1.0
     
-        '''
+        
     # Add this to your ApeControl class in ape_control.py
     def calibrate(self, gcmd):
-        target = gcmd.get_float('TARGET', 200.0)
-        power = gcmd.get_float('POWER', 0.25) # 25% power for SS test
-        heater = self.target_heater
+        #target = gcmd.get_float('TARGET', 200.0)
+        #power = gcmd.get_float('POWER', 0.25) # 25% power for SS test
+        #heater = self.target_heater
         
-        logging.info(f"Starting calibration for {target}C with {power*100}% power...")
+        logging.info(f"Starting calibration...")
+        self.gcode.respond_info("Starting calibration...")
+        return self.reactor.Never
         #gcmd.respond_info(f"PP-Control: Starting calibration for {target}C...")
-
+        '''
         # --- PHASE 1: Transient Analysis (Slope & Overshoot) ---
         gcmd.respond_info("Phase 1: Measuring Rise Slope and Overshoot...")
         heater.set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
