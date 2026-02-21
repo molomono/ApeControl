@@ -9,7 +9,7 @@ class StateLookahead:
         self.state_queues = {}
         
         # We must wait for the printer to be ready to lookup other objects
-        self.printer.register_event_handler("klippy:ready", self._handle_ready)
+        self.printer.register_event_handler("klippy:connected", self._handle_ready)
 
     def _handle_ready(self):
         self.toolhead = self.printer.lookup_object('toolhead')
