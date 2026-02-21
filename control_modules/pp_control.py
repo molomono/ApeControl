@@ -193,7 +193,6 @@ class PPControl(BaseController):
     def calibrate(self, gcmd):
         target = gcmd.get_float('TARGET', 200.0)
         power = gcmd.get_float('POWER', 0.25) # 25% power for SS test
-        heater = self.target_heater
         
         self.gcode.respond_info(f"PP-Control: Starting calibration for {target}C...")
         
@@ -202,10 +201,10 @@ class PPControl(BaseController):
         self.real_set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
         
         start_time = self.printer.get_reactor().monotonic()
-        start_temp = heater.get_status(start_time)['temperature']
+        start_temp = self.pheater.get_status(start_time)['temperature']
         
         # Wait for target
-        while heater.get_status(self.printer.get_reactor().monotonic())['temperature'] < target:
+        while self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature'] < target:
             self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
         
         hit_target_time = self.printer.get_reactor().monotonic()
@@ -219,7 +218,7 @@ class PPControl(BaseController):
         max_temp = target
         while True:
             self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
-            current_temp = heater.get_status(self.printer.get_reactor().monotonic())['temperature']
+            current_temp = self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature']
             if current_temp > max_temp:
                 max_temp = current_temp
             else:
@@ -233,7 +232,7 @@ class PPControl(BaseController):
         low_threshold = target * 0.8
         self.gcode.respond_info(f"Phase 2: Cooling to {low_threshold}C for SS test...")
         
-        while heater.get_status(self.printer.get_reactor().monotonic())['temperature'] > low_threshold:
+        while self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature'] > low_threshold:
             self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 1.0)
 
         # Steady State Test
@@ -243,7 +242,7 @@ class PPControl(BaseController):
         # Wait 2 minutes for thermal equilibrium
         self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 120.0)
         
-        ss_temp = heater.get_status(self.printer.get_reactor().monotonic())['temperature']
+        ss_temp = self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature']
         k_ss = power / ss_temp
         
         self.gcode.respond_info("--- CALIBRATION COMPLETE ---")

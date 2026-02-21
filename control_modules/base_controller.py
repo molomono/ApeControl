@@ -10,9 +10,9 @@ class BaseController(ABC):
 
     def install_hijack(self):
         # 1. Find the actual Klipper heater object
-        pheater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        self.pheater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
         # 2. Find the ControlPID instance inside that heater
-        self.target_heater = pheater.control
+        self.target_heater = self.pheater.control
         
         # 3. Save the original method
         self.orig_temp_update = self.target_heater.temperature_update
