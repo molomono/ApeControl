@@ -1,17 +1,20 @@
 import logging
 from .base_controller import BaseController
+from .state_look_ahead import StateLookahead
 
 class PPControl(BaseController):
     def __init__(self, config):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
+
+        self.state_lookahead = StateLookahead(self.printer)
+        self.state_lookahead.register_intercept('M106', 'S', 'fan_speed', type_conv=float)  # Look-ahead for part cooling fan speed
         
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
-        #self.toolhead = self.printer.lookup_object('toolhead')
 
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
@@ -123,6 +126,8 @@ class PPControl(BaseController):
 
         
         logging.info("PP-Control Control Effort: PID_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (u_fb_pid, u_ff, self.e_velocity_filtered * self.k_ev))
+        lookaheadtime = 1.0
+        logging.info("PP-Control %.3f sec LookAhead: %.3f" % (lookaheadtime, self.state_lookahead.get_state_at('fan_speed', lookaheadtime, fan_speed)))
 
         if not self.fb_enable:
             return u_ff
