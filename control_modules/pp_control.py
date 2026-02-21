@@ -6,12 +6,9 @@ class PPControl(BaseController):
     def __init__(self, config):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
-
-        
         
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
-
 
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
@@ -53,10 +50,14 @@ class PPControl(BaseController):
 
     def handle_ready(self):
         self.install_hijack()
-        
+
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
+        self.gcode = self.printer.lookup_object('gcode')
+
+        self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
+                                    help="Calibrate ApeControl parameters")
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
@@ -183,3 +184,66 @@ class PPControl(BaseController):
         if duration >= self.coast_time_down:
             self._transition("regulate", read_time)
         return 1.0
+    
+
+    # Add this to your ApeControl class in ape_control.py
+    def calibrate(self, gcmd):
+        target = gcmd.get_float('TARGET', 200.0)
+        power = gcmd.get_float('POWER', 0.25) # 25% power for SS test
+        heater = self.target_heater
+        
+        gcmd.respond_info(f"PP-Control: Starting calibration for {target}C...")
+
+        # --- PHASE 1: Transient Analysis (Slope & Overshoot) ---
+        gcmd.respond_info("Phase 1: Measuring Rise Slope and Overshoot...")
+        heater.set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
+        
+        start_time = self.printer.get_reactor().monotonic()
+        start_temp = heater.get_status(start_time)['temperature']
+        
+        # Wait for target
+        while heater.get_status(self.printer.get_reactor().monotonic())['temperature'] < target:
+            self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
+        
+        hit_target_time = self.printer.get_reactor().monotonic()
+        heater.set_pwm(hit_target_time, 0.0) # Power Off
+        
+        # Calculate Slope Up
+        rise_slope = (target - start_temp) / (hit_target_time - start_time)
+        gcmd.respond_info(f"Slope Up: {rise_slope:.3f} C/s")
+
+        # Capture Overshoot
+        max_temp = target
+        while True:
+            self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
+            current_temp = heater.get_status(self.printer.get_reactor().monotonic())['temperature']
+            if current_temp > max_temp:
+                max_temp = current_temp
+            else:
+                # Temperature started dropping
+                break
+                
+        overshoot = max_temp - target
+        gcmd.respond_info(f"Overshoot captured: {overshoot:.2f} C")
+
+        # --- PHASE 2: Cool Down & Steady State ---
+        low_threshold = target * 0.8
+        gcmd.respond_info(f"Phase 2: Cooling to {low_threshold}C for SS test...")
+        
+        while heater.get_status(self.printer.get_reactor().monotonic())['temperature'] > low_threshold:
+            self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 1.0)
+
+        # Steady State Test
+        gcmd.respond_info(f"Applying constant power {power*100}% for Steady-State analysis...")
+        heater.set_pwm(self.printer.get_reactor().monotonic(), power)
+        
+        # Wait 2 minutes for thermal equilibrium
+        self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 120.0)
+        
+        ss_temp = heater.get_status(self.printer.get_reactor().monotonic())['temperature']
+        k_ss = power / ss_temp
+        
+        gcmd.respond_info("--- CALIBRATION COMPLETE ---")
+        gcmd.respond_info(f"Recommended K_SS: {k_ss:.6f}")
+        gcmd.respond_info(f"Recommended T_OVERSHOOT: {overshoot:.2f}")
+        gcmd.respond_info(f"Fall slope measurement is recommended via logs.")
