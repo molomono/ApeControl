@@ -53,10 +53,12 @@ class PPControl(BaseController):
 
     def handle_ready(self):
         self.install_hijack()
-        
+
         # Initialize State Look-ahead for proactive control
-        self.state_lookahead = StateLookahead(self.printer)
-        self.state_lookahead.register_intercept('M106', 'S', 'fan_speed', type_conv=float)  # Look-ahead for part cooling fan speed
+        self.state_lookahead = StateLookahead(self.printer)        
+        # Example: Wrap Fan (M106) and Temp (M104)
+        self.wrap_command('M106', 'S', 'fan_speed')
+        self.wrap_command('M104', 'S', 'target_temp')
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
