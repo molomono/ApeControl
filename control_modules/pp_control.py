@@ -12,12 +12,6 @@ class PPControl(BaseController):
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
-        self.state_lookahead = StateLookahead(self.printer)
-        self.state_lookahead.register_intercept('M106', 'S', 'fan_speed', type_conv=float)  # Look-ahead for part cooling fan speed
-
-        # Useful objects for proactive power compensation control logic
-        self.part_fan = self.printer.lookup_object('fan')
-        self.gcode_move = self.printer.lookup_object('gcode_move')
 
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
@@ -59,6 +53,13 @@ class PPControl(BaseController):
 
     def handle_ready(self):
         self.install_hijack()
+        
+        # Initialize State Look-ahead for proactive control
+        self.state_lookahead = StateLookahead(self.printer)
+        self.state_lookahead.register_intercept('M106', 'S', 'fan_speed', type_conv=float)  # Look-ahead for part cooling fan speed
+        # Useful objects for proactive power compensation control logic
+        self.part_fan = self.printer.lookup_object('fan')
+        self.gcode_move = self.printer.lookup_object('gcode_move')
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
