@@ -56,8 +56,8 @@ class PPControl(BaseController):
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
 
-        self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
-                                    help="Calibrate ApeControl parameters")
+        #self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
+        #                            help="Calibrate ApeControl parameters")
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
@@ -185,7 +185,7 @@ class PPControl(BaseController):
             self._transition("regulate", read_time)
         return 1.0
     
-
+        '''
     # Add this to your ApeControl class in ape_control.py
     def calibrate(self, gcmd):
         target = gcmd.get_float('TARGET', 200.0)
@@ -194,7 +194,7 @@ class PPControl(BaseController):
         
         logging.info(f"Starting calibration for {target}C with {power*100}% power...")
         #gcmd.respond_info(f"PP-Control: Starting calibration for {target}C...")
-        '''
+
         # --- PHASE 1: Transient Analysis (Slope & Overshoot) ---
         gcmd.respond_info("Phase 1: Measuring Rise Slope and Overshoot...")
         heater.set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
