@@ -192,8 +192,9 @@ class PPControl(BaseController):
         power = gcmd.get_float('POWER', 0.25) # 25% power for SS test
         heater = self.target_heater
         
-        gcmd.respond_info(f"PP-Control: Starting calibration for {target}C...")
-
+        logging.info(f"Starting calibration for {target}C with {power*100}% power...")
+        #gcmd.respond_info(f"PP-Control: Starting calibration for {target}C...")
+        '''
         # --- PHASE 1: Transient Analysis (Slope & Overshoot) ---
         gcmd.respond_info("Phase 1: Measuring Rise Slope and Overshoot...")
         heater.set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
@@ -247,3 +248,4 @@ class PPControl(BaseController):
         gcmd.respond_info(f"Recommended K_SS: {k_ss:.6f}")
         gcmd.respond_info(f"Recommended T_OVERSHOOT: {overshoot:.2f}")
         gcmd.respond_info(f"Fall slope measurement is recommended via logs.")
+        '''
