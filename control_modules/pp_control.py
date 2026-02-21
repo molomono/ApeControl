@@ -56,7 +56,7 @@ class PPControl(BaseController):
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
-        self.reactor = self.pritner.get_reactor()
+        self.reactor = self.printer.get_reactor()
 
                 
         self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
