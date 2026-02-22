@@ -3,6 +3,7 @@ import logging
 
 
 PARAM_BASE = 255.
+TEMP_AMBIENT = 20.
 
 class PPCalibrate:
     def __init__(self, config):
@@ -149,7 +150,9 @@ class ControlAutoTune:
         # Compute FOWDT model parameters
         omega_u  = (2*math.pi) / Tu # critical frequency
         logging.info("PP-AutoTune: omega_u: %f ",omega_u)
-        gain_product = Kss * Ku
+        K = (self.target - TEMP_AMBIENT) / max(duty_cycle, 0.001)
+        logging.info("PP-AutoTune: K=%f", K)
+        gain_product = K * Ku
         logging.info("PP-AutoTune: gain_product: %f ",gain_product)
         #if gain_product <= 1.0: # TODO: catch the system if the gain product won't cause FOWDT oscillations
         #    return None
