@@ -25,11 +25,18 @@ class BaseController(ABC):
     def temperature_update(self, read_time, temp, target_temp):
         """Called by heater to update control logic and set PWM"""
         pass
-    
+
+    @abstractmethod
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         """Return True if heater is still stabilizing (default: False)"""
         pass
 
+    @abstractmethod
     def set_pwm(self, read_time, value):
-        """(Optional) Can be overwriten for things like AutoTune classes"""
-        self.heater.set_pwm(read_time,value)
+        """Can be e overwriten for things like AutoTune classes"""
+        pass
+    '''
+    def set_pwm(self, read_time, value): # simplest form, place inside your control class
+        self.heater.set_pwm(read_time, value)
+        
+    '''
