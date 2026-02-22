@@ -92,30 +92,31 @@ class PPControl(BaseController):
         #self.orig_temp_update(read_time, temp, target_temp)
 
         # Global Off Trigger
-        if target_temp == 0:
+        if target_temp <= 0:
+            self.set_pwm(read_time, 0.0)  # Always set hardware to off
             if self.state != "off":
                 self._transition("off", read_time)
-            return 0.0
-
-        # Calculate Error and Duration
-        error = target_temp - temp
-        duration = read_time - self.last_state_change
-
-        # Handle state transitions when target changes mid-coast (only if target actually changed)
-        if self.state in ["coast_up", "coast_down"] and target_changed:
-            self._transition("regulate", 0.0)  # Force transition to regulate, allowing min duration to be met for min/max state changes
-
-        # State Dispatch: executes the logic for the current state and returns the power level
-        if self.state == "regulate":
-            co = self._state_regulate(error, duration, read_time)
+            #return 0.0
         else:
-            co = self._states[self.state](error, duration, read_time)
-        
-        bounded_co = max(0., min(self.heater_max_power, co))
-        # Set PWM output (assumes heater object is accessible via self.printer)
-        self.set_pwm(read_time, bounded_co)
+            # Calculate Error and Duration
+            error = target_temp - temp
+            duration = read_time - self.last_state_change
 
-        self.prev_temp_deriv = temp_deriv
+            # Handle state transitions when target changes mid-coast (only if target actually changed)
+            if self.state in ["coast_up", "coast_down"] and target_changed:
+                self._transition("regulate", 0.0)  # Force transition to regulate, allowing min duration to be met for min/max state changes
+
+            # State Dispatch: executes the logic for the current state and returns the power level
+            if self.state == "regulate":
+                co = self._state_regulate(error, duration, read_time)
+            else:
+                co = self._states[self.state](error, duration, read_time)
+            
+            bounded_co = max(0., min(self.heater_max_power, co))
+            # Set PWM output (assumes heater object is accessible via self.printer)
+            self.set_pwm(read_time, bounded_co)
+
+            self.prev_temp_deriv = temp_deriv
         
     
 
@@ -163,7 +164,6 @@ class PPControl(BaseController):
     # --- Logic for the individual states ---
     def _state_off(self, error, duration, read_time):
         """Off state: wait for non-zero target"""
-        self.set_pwm(read_time, 0.0)  # Always set hardware to off
         if error > 0:
             self._transition("max_power", read_time)
         return 0.0
