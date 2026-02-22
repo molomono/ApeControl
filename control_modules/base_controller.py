@@ -11,7 +11,7 @@ class BaseController(ABC):
         self.printer = config.get_printer()
         self.heater_name = config.get_name().split()[-1]
         self.target_heater = None # To be found during Klipper's 'ready' state
-
+        self.target_temp = None
         # Relevant objects
         self.heater = None
         
@@ -20,7 +20,7 @@ class BaseController(ABC):
     def temperature_update(self, read_time, temp, target_temp):
         """Called by heater to update control logic and set PWM"""
         pass
-    @abstractmethod
+    
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         """Return True if heater is still stabilizing (default: False)"""
         pass

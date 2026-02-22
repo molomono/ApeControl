@@ -7,6 +7,10 @@ import math
 import logging
 from .base_controller import BaseController
 
+SETTLE_DELTA = 1.
+SETTLE_SLOPE = .1
+AMBIENT_TEMP = 25.
+
 class PPControl(BaseController):
     def __init__(self, config):
         # Initialize the base (hijacks Klipper)
@@ -32,10 +36,16 @@ class PPControl(BaseController):
         # On off switch for feed-back control
         self.fb_enable = config.getboolean('fb_enable', True)
 
+        # Min derivative time, for computing temp velocity
+        self.min_deriv_time = config.getfloat('deriv_time', 2., above=0.)
+
         ## State Machine State
         self.state = "off"
         self.last_state_change = 0.0
         self.e_velocity_filtered = 0.0
+        self.prev_temp_deriv = 0.
+        self.prev_temp = AMBIENT_TEMP
+        self.prev_temp_time = 0.
         
         ## State dispatch table
         self._states = {
@@ -46,9 +56,6 @@ class PPControl(BaseController):
             "min_power": self._state_min_power,
             "coast_down": self._state_coast_down
         }
-        
-        # Reference temperature (synced with PID)
-        self.t_ref = 0.0
 
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
@@ -64,21 +71,26 @@ class PPControl(BaseController):
         self.gcode = self.printer.lookup_object('gcode')
         self.reactor = self.printer.get_reactor()
 
-    def compute_control(self, pid_self, read_time, temp, target_temp):
+    def temperature_update(self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
         
         Args:
-            pid_self: The ControlPID instance from Klipper
             read_time: Current read time from Klipper
             temp: Current temperature reading
-            target_temp: Target temperature (same as pid_self.t_ref after PID update)
+            target_temp: Target temperature (same as self.target_temp after PID update)
         """
         # Check if target changed before updating
-        target_changed = (target_temp != self.t_ref)
+        target_changed = (target_temp != self.target_temp)
         
         # Sync local reference with PID target
-        self.t_ref = target_temp
-        
+        self.target_temp = target_temp
+        time_diff = read_time - self.prev_temp_time
+        temp_diff = temp - self.prev_temp
+        if time_diff >= self.min_deriv_time:
+            temp_deriv = temp_diff / time_diff
+        else:
+            temp_deriv = (self.prev_temp_deriv * (self.min_deriv_time - time_diff) + temp_diff) / self.min_deriv_time
+
         # Call the original PID to update its internal state and capture the PWM
         # This is critical: it updates pid_self.prev_temp, prev_temp_deriv, etc.
         self.orig_temp_update(read_time, temp, target_temp)
@@ -99,18 +111,19 @@ class PPControl(BaseController):
 
         # State Dispatch: executes the logic for the current state and returns the power level
         if self.state == "regulate":
-            power_output = self._state_regulate(error, duration, read_time, pid_self)
+            power_output = self._state_regulate(error, duration, read_time)
         else:
             power_output = self._states[self.state](error, duration, read_time)
         
+        self.prev_temp_deriv = temp_deriv
         return power_output
     
 
-    def ff_fb_control(self, pid_self, read_time):
+    def ff_fb_control(self, read_time):
         """Combine feed-forward and feedback control in regulate state
         
         Args:
-            pid_self: The ControlPID instance to access captured PWM
+            read_time: Event time at which to read sensors and commands.
             
         Returns:
             Combined PWM value (feed-forward + captured PID feedback)
@@ -129,7 +142,7 @@ class PPControl(BaseController):
         # Low-pass filter the error due to stuttery velocity readings. This should be solved by using look-ahead velocity for some known time constant beween power and temperature reading.
         self.e_velocity_filtered = min(0.0, (1 - self.ev_smoothing) * self.e_velocity_filtered + self.ev_smoothing * e_velocity)
         # Feed forward control logic
-        u_ff = (self.t_ref - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + self.e_velocity_filtered * self.k_ev
+        u_ff = (self.target_temp - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + self.e_velocity_filtered * self.k_ev
 
         
         logging.info("PP-Control Control Effort: PID_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (u_fb_pid, u_ff, self.e_velocity_filtered * self.k_ev))
@@ -167,10 +180,10 @@ class PPControl(BaseController):
             self._transition("regulate", read_time)
         return 0.0
 
-    def _state_regulate(self, error, duration, read_time, pid_self=None):
+    def _state_regulate(self, error, duration, read_time):
         """Regulate state: maintain temperature with feedback control"""
         if abs(error) < self.t_delta_regulate or duration < self.min_regulation_duration: # Temp within regulation window or min duration not met
-            return self.ff_fb_control(pid_self,read_time)
+            return self.ff_fb_control(read_time)
         elif error > self.t_delta_regulate:  # Temp too far below target
             self._transition("max_power", read_time)
             return 1.0
@@ -189,3 +202,8 @@ class PPControl(BaseController):
         if duration >= self.coast_time_down:
             self._transition("regulate", read_time)
         return 1.0
+    
+    def check_busy(self, eventtime, smoothed_temp, target_temp):
+        temp_diff = target_temp - smoothed_temp
+        return (abs(temp_diff) > SETTLE_DELTA
+                or abs(self.prev_temp_deriv) > SETTLE_SLOPE)
