@@ -147,9 +147,7 @@ class PPControl(BaseController):
 
         
         logging.info("PP-Control Control Effort: PID_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (u_fb_pid, u_ff, self.e_velocity_filtered * self.k_ev))
-        lookaheadtime = 1.0
-        logging.info("PP-Control %.3f sec LookAhead: %.3f" % (lookaheadtime, self.state_lookahead.get_state_at('fan_speed', lookaheadtime, fan_speed)))
-
+        
         if not self.fb_enable:
             return u_ff
         else:           
