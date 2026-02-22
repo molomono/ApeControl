@@ -3,11 +3,13 @@ import logging
 from .base_controller import BaseController
 from .state_look_ahead import StateLookahead
 
+from .pp_calibrate import PPCalibrate
+
 class PPControl(BaseController):
     def __init__(self, config):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
-
+        self.printer.load_object(config, "pp_calibrate")
 
         # Register the ready handler to perform the hijack after Klipper is fully initialized
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
@@ -49,8 +51,6 @@ class PPControl(BaseController):
         
         # Reference temperature (synced with PID)
         self.t_ref = 0.0
-
-        self.printer.load_object(config, "pp_calibrate")
 
     def handle_ready(self):
         self.install_hijack()

@@ -9,6 +9,7 @@ class ApeControl:
         if arch_type == 'pp_control':
             from .control_modules.pp_control import PPControl
             self.controller = PPControl(config)
+            self.calibrater = 
         elif arch_type == 'ss_ff_gain':
             from .control_modules.ss_ff_gain import SSFFControl
             self.controller = SSFFControl(config)
