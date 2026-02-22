@@ -139,7 +139,7 @@ class ControlAutoTune:
         Tu = time_diff
        
         # Estimate Kss from on-off dutycycle to maintain averaged target temp
-        pulse_width = self.peaks[pos-1][1] - self.peaks[pos-2][1]
+        pulse_width = self.peaks[pos][1] - self.peaks[pos-1][1]
         logging.info("PP-AutoTune: Pulse_width: %f ",pulse_width)
         duty_cycle = pulse_width / Tu # pulse width divided by the period
         logging.info("PP-AutoTune: Duty_cycle: %f ",duty_cycle)
