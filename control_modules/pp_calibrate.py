@@ -137,19 +137,23 @@ class ControlAutoTune:
         amplitude = .5 * abs(temp_diff)
         Ku = 4. * self.heater_max_power / (math.pi * amplitude)
         Tu = time_diff
-
+       
         # Estimate Kss from on-off dutycycle to maintain averaged target temp
         pulse_width = self.peaks[pos-1][1] - self.peaks[pos-2][1]
+        logging.info("PP-AutoTune: Pulse_width: %f ",pulse_width)
         duty_cycle = pulse_width / Tu # pulse width divided by the period
+        logging.info("PP-AutoTune: Duty_cycle: %f ",duty_cycle)
         Kss_est =  duty_cycle / self.target # estimated steady state power ratio of max power
         Kss = Kss_est
-
+        logging.info("PP-AutoTune: Kss: %f ",Kss)
         # Compute FOWDT model parameters
         omega_u  = (2*math.pi) / Tu # critical frequency
+        logging.info("PP-AutoTune: omega_u: %f ",omega_u)
         gain_product = Kss * Ku
+        logging.info("PP-AutoTune: gain_product: %f ",gain_product)
         #if gain_product <= 1.0: # TODO: catch the system if the gain product won't cause FOWDT oscillations
         #    return None
-        tau = math.sqrt(math.pow(gain_product,2) - 1) / omega_u # Time constant
+        tau = math.sqrt(gain_product**2 - 1) / omega_u # Time constant
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
         
         ################# This section must be changed for FF calibration #####################
