@@ -9,7 +9,7 @@ class ApeControl:
         if arch_type == 'pp_control':
             from .control_modules.pp_control import PPControl
             self.controller = PPControl(config)
-            self.calibrater = 
+            self.printer.load_object(config, "pp_calibrate") # Load the calibration module for PP-Control
         elif arch_type == 'ss_ff_gain':
             from .control_modules.ss_ff_gain import SSFFControl
             self.controller = SSFFControl(config)
