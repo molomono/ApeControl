@@ -70,6 +70,8 @@ class PPControl(BaseController):
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
         self.reactor = self.printer.get_reactor()
+        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        self.heater_max_power = self.heater.get_max_power()
 
     def temperature_update(self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
@@ -111,12 +113,16 @@ class PPControl(BaseController):
 
         # State Dispatch: executes the logic for the current state and returns the power level
         if self.state == "regulate":
-            power_output = self._state_regulate(error, duration, read_time)
+            co = self._state_regulate(error, duration, read_time)
         else:
-            power_output = self._states[self.state](error, duration, read_time)
+            co = self._states[self.state](error, duration, read_time)
         
+        bounded_co = max(0., min(self.heater_max_power, co))
+        # Set PWM output (assumes heater object is accessible via self.printer)
+        self.set_pwm(read_time, bounded_co)
+
         self.prev_temp_deriv = temp_deriv
-        return power_output
+        
     
 
     def ff_fb_control(self, read_time):
