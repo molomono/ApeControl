@@ -21,6 +21,11 @@ class ApeControl:
         elif arch_type == 'simple_ff_fb_control':
             from .control_modules.simple_ff_fb_control import SimpleFFFBControl
             self.controller = SimpleFFFBControl(config)
+        elif arch_type == 'mpc':
+            from .control_modules.control_mpc import ControlMPC, MpcCalibrate
+            self.controller = self.exchange_controller(ControlMPC(config))
+            self.printer.add_object('mpc_calibrate', MpcCalibrate(config)) 
+        
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to PP-Control." % arch_type)
             from .control_modules.pp_control import PPControl
