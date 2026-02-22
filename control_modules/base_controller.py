@@ -7,7 +7,7 @@ import logging
 from abc import ABC, abstractmethod
 
 class BaseController(ABC):
-    def __init__(self, heater, config):
+    def __init__(self, config):
         self.printer = config.get_printer()
         self.heater_name = config.get_name().split()[-1]
         self.target_heater = None # To be found during Klipper's 'ready' state
