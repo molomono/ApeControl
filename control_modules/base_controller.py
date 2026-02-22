@@ -14,13 +14,12 @@ class BaseController(ABC):
         self.target_temp = None
         # Relevant objects
         self.heater = None
-        self.heater_max_power = None
+        self.heater_max_power = config.getfloat('max_power', 1.0)
         
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
     def handle_ready(self):
         self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
-        self.heater_max_power = self.heater.get_max_power()
 
     @abstractmethod
     def temperature_update(self, read_time, temp, target_temp):
