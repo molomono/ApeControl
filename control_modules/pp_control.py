@@ -57,16 +57,6 @@ class PPControl(BaseController):
             "coast_down": self._state_coast_down
         }
 
-        # Register the ready handler to perform the hijack after Klipper is fully initialized
-        #self.printer.register_event_handler("klippy:ready", self.handle_ready)
-
-
-    #def handle_ready(self):
-        # Useful objects for proactive power compensation control logic
-        self.part_fan = self.printer.lookup_object('fan')
-        self.gcode_move = self.printer.lookup_object('gcode_move')
-        self.gcode = self.printer.lookup_object('gcode')
-        self.reactor = self.printer.get_reactor()
 
 
     def temperature_update(self, read_time, temp, target_temp):
@@ -210,5 +200,5 @@ class PPControl(BaseController):
         return (abs(temp_diff) > SETTLE_DELTA
                 or abs(self.prev_temp_deriv) > SETTLE_SLOPE)
     
-    def set_pwm(self, read_time, value):
-        self.heater.set_pwm(read_time, value)
+    #def set_pwm(self, read_time, value):
+    #    self.heater.set_pwm(read_time, value)
