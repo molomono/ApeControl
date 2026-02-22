@@ -43,14 +43,14 @@ class PPCalibrate:
         
         ########## Actual calibraiton logic, data has been collected in ControlAutoTune lists.
         # Log and report results
-        Ku, Tu, Kss, tau, L = calibrate.calc_final_fowdt()
+        Kss,Ku,Tu,tau,L,omega_u = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
         logging.info("PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", Kss,Ku,Tu,omega_u,tau,L)
         
         gcmd.respond_info(
-            "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+            "PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f\n"
             "The SAVE_CONFIG command will update the printer config file\n"
-            "with these parameters and restart the printer." % (Ku, Tu, Kss, tau, L))
+            "with these parameters and restart the printer." % (Kss, Ku, Tu, omega_u, tau, L))
         
         # Store results for SAVE_CONFIG
         cfgname = heater.get_name()
@@ -170,7 +170,7 @@ class ControlAutoTune:
         Ki = Kp / Ti
         Kd = Kp * Td
         
-        return Kss,Ku,Tu,omega_u,tau,L
+        return Kss,Ku,Tu,tau,L,omega_u
     
     def calc_final_fowdt(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
