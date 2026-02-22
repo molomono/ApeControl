@@ -16,7 +16,7 @@ class ApeControl:
             pass # example line for adding addtional control modules
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm." % arch_type)
-
+        
         self.printer.register_event_handler("klippy:ready", self.exchange_controller)
 
     ### This function uses similar logic to the pid_calibrate script, exchanging the existing Controller for one of the ApeControl architectures. 
