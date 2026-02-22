@@ -11,7 +11,6 @@ class ApeControl:
             from .control_modules.pp_control import PPControl 
             from .control_modules.pp_calibrate import PPCalibrate
             self.new_controller = PPControl(config)
-            #self.exchange_controller(new_controller)
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) 
         elif arch_type == 'mpc-example':
             pass # example line for adding addtional control modules
@@ -32,7 +31,10 @@ class ApeControl:
     def exchange_controller(self):
         # load objects
         pheaters = self.printer.lookup_object('heaters')
-        heater = pheaters.lookup_heater(self.name)
+        try:
+            heater = pheaters.lookup_heater(self.name)
+        except self.printer.config_error as e:
+            raise logging.error("%s Heater object could not be found for name %s",str(e), self.name)
     
         old_control = heater.set_control(self.new_controller) # exchange control objects
         self.new_controller.backup_control = old_control # store the old control object in the new controller for saftey fallback
