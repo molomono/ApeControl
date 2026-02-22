@@ -64,6 +64,7 @@ TUNE_PID_DELTA = 5.0
 class ControlAutoTune:
     def __init__(self, heater, target):
         self.heater = heater
+        self.target = target # used for Kss computation later
         self.heater_max_power = heater.get_max_power()
         self.calibrate_temp = target
         # Heating control
@@ -129,7 +130,7 @@ class ControlAutoTune:
             return
         self.calc_pid(len(self.peaks)-1)
 
-    def calc_fowdt(self, pos, Kss):
+    def calc_fowdt(self, pos):
         temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
         time_diff = self.peaks[pos][1] - self.peaks[pos-2][1]
         # Use Astrom-Hagglund method to estimate Ku and Tu
@@ -138,8 +139,9 @@ class ControlAutoTune:
         Tu = time_diff
 
         # Estimate Kss from on-off dutycycle to maintain averaged target temp
-        power_on_time = self.peaks[pos-1][1] - self.peaks[pos-2][1] # low to high peak period
-        Kss_est = power_on_time / Tu # power on time divided by the oscillation period
+        pulse_width = self.peaks[pos-1][1] - self.peaks[pos-2][1]
+        duty_cycle = pulse_width / Tu # pulse width divided by the period
+        Kss_est =  duty_cycle / self.target # estimated steady state power ratio of max power
         Kss = Kss_est
 
         # Compute FOWDT model parameters
