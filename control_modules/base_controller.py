@@ -25,7 +25,7 @@ class BaseController(ABC):
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
         self.reactor = self.printer.get_reactor()
-        
+
     @abstractmethod
     def temperature_update(self, read_time, temp, target_temp):
         """Called by heater to update control logic and set PWM"""
@@ -36,7 +36,6 @@ class BaseController(ABC):
         """Return True if heater is still stabilizing (default: False)"""
         pass
 
-    @abstractmethod
     def set_pwm(self, read_time, value):
         """Can be e overwriten for things like AutoTune classes"""
         self.heater.set_pwm(read_time, value)
