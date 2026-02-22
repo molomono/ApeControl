@@ -7,9 +7,6 @@ class PPControl(BaseController):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
 
-        # Register the ready handler to perform the hijack after Klipper is fully initialized
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
-
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.k_fan = config.getfloat('k_fan', 0.0)
@@ -47,6 +44,10 @@ class PPControl(BaseController):
         
         # Reference temperature (synced with PID)
         self.t_ref = 0.0
+
+        # Register the ready handler to perform the hijack after Klipper is fully initialized
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+
 
     def handle_ready(self):
         # self.install_hijack()
