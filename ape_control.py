@@ -32,7 +32,7 @@ class ApeControl:
         try:
             heater = pheaters.lookup_heater(self.name)
         except:
-            raise logging.error("Could not find heater: %s with name %s" % (self.name))
+            raise logging.error("Could not find heater: with name %s" % (self.name))
         
         old_control = heater.set_control(new_controller) # exchange control objects
         new_controller.backup_control = old_control # store the old control object in the new controller for saftey fallback
