@@ -5,6 +5,7 @@ class ApeControl:
         self.printer = config.get_printer()
         self.name = config.get_name().split()[-1] # (heater) name
         arch_type = config.get('architecture', 'pp_control')
+        self.old_control = None
         
         # Logic to dynamically load from the ape_modules folder
         if arch_type == 'pp_control':
@@ -12,22 +13,17 @@ class ApeControl:
             from .control_modules.pp_calibrate import PPCalibrate
             self.new_controller = PPControl(config)
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) 
+        elif arch_type == 'pid_control':
+            from .control_modules.pid_control import PIDControl 
+            self.new_controller = PIDControl(config)
+            
         elif arch_type == 'mpc-example':
             pass # example line for adding addtional control modules
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm." % arch_type)
-        
+
         self.printer.register_event_handler("klippy:ready", self.exchange_controller)
 
-    ### This function uses similar logic to the pid_calibrate script, exchanging the existing Controller for one of the ApeControl architectures. 
-    # I feel like this should be moved into the BaseController, and forced to be called instead of install_hijack.
-    # but that will be a version 2.0 of the base class. leaving it hear for clarity.
-    # 
-    # The issue is the base-class is the controller which is being exchanged.
-    # So ideally it is called outside that context. So this is probably the right location
-    # i just need to restructer the "install_hijack" function and monkeypatch.
-    # the monkey patch can be converted into a type of safety logic (just a wrapper on the update) to trigger the backup controller.
-    # And i guess install_hijack isn't necissary either anymore. The exchange is handeld by ApeControl class.
     def exchange_controller(self):
         # load objects
         pheaters = self.printer.lookup_object('heaters')
@@ -36,9 +32,8 @@ class ApeControl:
         except self.printer.config_error as e:
             raise logging.error("%s Heater object could not be found for name %s",str(e), self.name)
     
-        old_control = heater.set_control(self.new_controller) # exchange control objects
-        self.new_controller.backup_control = old_control # store the old control object in the new controller for saftey fallback
-        
+        self.old_control = heater.set_control(self.new_controller) # exchange control objects
+       
 
 def load_config_prefix(config):
     return ApeControl(config)
