@@ -10,7 +10,7 @@ class ApeControl:
         if arch_type == 'pp_control':
             from .control_modules.pp_control import PPControl 
             from .control_modules.pp_calibrate import PPCalibrate
-            new_controller = PPControl(config)
+            self.new_controller = PPControl(config)
             #self.exchange_controller(new_controller)
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) 
         elif arch_type == 'mpc-example':
