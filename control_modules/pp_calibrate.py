@@ -56,7 +56,7 @@ class PPCalibrate:
         cfgname = heater.get_name()
         logging.info("PP-AutoTune: %s", cfgname)
         configfile = self.printer.lookup_object('configfile')
-        #configfile.set(cfgname, 'control', 'pp_control')
+        configfile.set(cfgname, 'control', 'pp_control')
         #configfile.set(cfgname, 'Ku', "%.3f" % (Ku,))
         #configfile.set(cfgname, 'Tu', "%.3f" % (Tu,))
         configfile.set(cfgname, 'K_ss', "%.3f" % (Kss,))
@@ -78,7 +78,6 @@ class ControlAutoTune:
         self.peak_time = 0.
         # Peak recording
         self.peaks = [] # (self.peak, self.peak_time)
-        self.relay_events = [] # (pwm_value, self.peak_time)
         # Sample recording
         self.last_pwm = 0.
         self.pwm_samples = []
@@ -133,18 +132,40 @@ class ControlAutoTune:
             self.peak = -9999999.
         if len(self.peaks) < 4:
             return
-        self.calc_pid(len(self.peaks)-1)
+        #self.calc_pid(len(self.peaks)-1)  # <--- Why is this here
 
     def calc_fowdt(self, pos):
         temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
         time_diff = self.peaks[pos][1] - self.peaks[pos-2][1]
+
+        # Does this cycle start at a temperature highpoint or lowpoint
+        if temp_diff >= 0:
+            start_on_peak = True
+        else:
+            start_on_peak = False
+
         # Use Astrom-Hagglund method to estimate Ku and Tu
         amplitude = .5 * abs(temp_diff)
         Ku = 4. * self.heater_max_power / (math.pi * amplitude)
         Tu = time_diff
        
         # Estimate Kss from on-off dutycycle to maintain averaged target temp
-        pulse_width = self.peaks[pos][1] - self.peaks[pos-1][1]
+        if start_on_peak:
+            pulse_width = 1 - self.peaks[pos][1] - self.peaks[pos-1][1]
+        else:
+            pulse_width = self.peaks[pos][1] - self.peaks[pos-1][1]
+
+        #TODO: Change the above logic to use:
+        #self.pwm_samples = (event_time, value)
+        # Load these values self.pwm_samples[pos]
+        logging.info("PP-Autotuen: pwm_samples: %s", self.pwm_samples)
+        # Compute the ratio of on to off time. This is our Kss - sensitivty
+
+
+        #TODO: Look at the time between switching the power off during a rising edge
+        # compute t_overshoot_up --> peak temperature above our setpoint.
+        # compute t_overshoot_down --> peak temperature below our setpoint-TUNE_PID_DELTA
+
         logging.info("PP-AutoTune: Pulse_width: %f ",pulse_width)
         duty_cycle = pulse_width / Tu # pulse width divided by the period
         logging.info("PP-AutoTune: Duty_cycle: %f ",duty_cycle)
