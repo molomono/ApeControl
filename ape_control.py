@@ -23,6 +23,7 @@ class ApeControl:
             self.controller = SimpleFFFBControl(config)
         elif arch_type == 'mpc':
             from .control_modules.control_mpc import ControlMPC, MpcCalibrate
+            # TODO: Build a abstract class which handles the interface between ApeControl modules and the original kalico MPC implementation
             self.controller = self.exchange_controller(ControlMPC(config))
             self.printer.add_object('mpc_calibrate', MpcCalibrate(config)) 
         
