@@ -57,7 +57,10 @@ class PPControl(BaseController):
             "coast_down": self._state_coast_down
         }
 
-
+        if self.fb_enable:
+            from .pid_control import PIDControl
+            self.feedback_controller = PIDControl(config)
+            self.feedback_controller.set_pwm = lambda read_time, value: setattr(self, 'fb_pwm', value)   
 
     def temperature_update(self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
@@ -67,6 +70,10 @@ class PPControl(BaseController):
             temp: Current temperature reading
             target_temp: Target temperature (same as self.target_temp after PID update)
         """
+        #
+        if self.fb_enable: # pass inputs to the feedback controller.
+            self.feedback_controller.temperature_update(read_time, temp, target_temp)
+
         # Check if target changed before updating
         target_changed = (target_temp != self.target_temp)
         
