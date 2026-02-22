@@ -147,8 +147,8 @@ class ControlAutoTune:
         # Compute FOWDT model parameters
         omega_u  = (2*math.pi) / Tu # critical frequency
         gain_product = Kss * Ku
-        if gain_product <= 1.0: # TODO: catch the system if the gain product won't cause FOWDT oscillations
-            return None
+        #if gain_product <= 1.0: # TODO: catch the system if the gain product won't cause FOWDT oscillations
+        #    return None
         tau = math.sqrt(math.pow(gain_product,2) - 1) / omega_u # Time constant
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
         
