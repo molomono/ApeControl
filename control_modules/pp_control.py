@@ -1,3 +1,4 @@
+import math
 import logging
 from .base_controller import BaseController
 from .state_look_ahead import StateLookahead
@@ -49,6 +50,8 @@ class PPControl(BaseController):
         # Reference temperature (synced with PID)
         self.t_ref = 0.0
 
+        self.printer.load_object(config, "pp_calibrate")
+
     def handle_ready(self):
         self.install_hijack()
 
@@ -57,10 +60,6 @@ class PPControl(BaseController):
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
         self.reactor = self.printer.get_reactor()
-
-                
-        self.gcode.register_command("CALIBRATE_APE", self.calibrate, 
-                                    desc="Calibrate ApeControl parameters")
 
     def compute_control(self, pid_self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control
@@ -187,66 +186,3 @@ class PPControl(BaseController):
         if duration >= self.coast_time_down:
             self._transition("regulate", read_time)
         return 1.0
-    
-        
-    # Add this to your ApeControl class in ape_control.py
-    def calibrate(self, gcmd):
-        target = gcmd.get_float('TARGET', 200.0)
-        power = gcmd.get_float('POWER', 0.25) # 25% power for SS test
-        
-        self.gcode.respond_info(f"PP-Control: Starting calibration for {target}C...")
-        
-        # --- PHASE 1: Transient Analysis (Slope & Overshoot) ---
-        self.gcode.respond_info("Phase 1: Measuring Rise Slope and Overshoot...")
-        self.real_set_pwm(self.printer.get_reactor().monotonic(), 1.0) # Full Power
-        
-        start_time = self.printer.get_reactor().monotonic()
-        start_temp = self.pheater.get_status(start_time)['temperature']
-        
-        # Wait for target
-        while self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature'] < target:
-            self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
-        
-        hit_target_time = self.printer.get_reactor().monotonic()
-        self.real_set_pwm(hit_target_time, 0.0) # Power Off
-        
-        # Calculate Slope Up
-        rise_slope = (target - start_temp) / (hit_target_time - start_time)
-        self.gcode.respond_info(f"Slope Up: {rise_slope:.3f} C/s")
-
-        # Capture Overshoot
-        max_temp = target
-        while True:
-            self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 0.5)
-            current_temp = self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature']
-            if current_temp > max_temp:
-                max_temp = current_temp
-            else:
-                # Temperature started dropping
-                break
-                
-        overshoot = max_temp - target
-        self.gcode.respond_info(f"Overshoot captured: {overshoot:.2f} C")
-
-        # --- PHASE 2: Cool Down & Steady State ---
-        low_threshold = target * 0.8
-        self.gcode.respond_info(f"Phase 2: Cooling to {low_threshold}C for SS test...")
-        
-        while self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature'] > low_threshold:
-            self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 1.0)
-
-        # Steady State Test
-        self.gcode.respond_info(f"Applying constant power {power*100}% for Steady-State analysis...")
-        self.real_set_pwm(self.printer.get_reactor().monotonic(), power)
-        
-        # Wait 2 minutes for thermal equilibrium
-        self.printer.get_reactor().pause(self.printer.get_reactor().monotonic() + 120.0)
-        
-        ss_temp = self.pheater.get_status(self.printer.get_reactor().monotonic())['temperature']
-        k_ss = power / ss_temp
-        
-        self.gcode.respond_info("--- CALIBRATION COMPLETE ---")
-        self.gcode.respond_info(f"Recommended K_SS: {k_ss:.6f}")
-        self.gcode.respond_info(f"Recommended T_OVERSHOOT: {overshoot:.2f}")
-        self.gcode.respond_info(f"Fall slope measurement is recommended via logs.")
-        
