@@ -18,22 +18,18 @@ class BaseController(ABC):
 
     def temperature_update(self, read_time, temp, target_temp):
         """Called by heater to update control logic and set PWM"""
+        pheaters = self.printer.lookup_object('heaters')
         try:
-            raise NotImplementedError("temperature_update must be implemented in the child class.")
-        except NotImplementedError as e:
-            pheaters = self.printer.lookup_object('heaters')
-            try:
-                heater = pheaters.lookup_heater(self.heater_name)
-            except self.printer.config_error as e:
-                raise logging.error("%s Heater object could not be found for name %s",str(e), self.name)
-        
-            # Attempt to restore backup controller if available
-            if self.backup_control is not None:
-                heater.set_control(self.backup_control)
-                logging.error(f"ApeControl: {e}. Restoring original controller for safety.")
-            else:
-                logging.critical(f"ApeControl: {e}. No backup controller available to restore!")
+            heater = pheaters.lookup_heater(self.heater_name)
+        except self.printer.config_error as e:
+            logging.error("%s Heater object could not be found for name %s", str(e), self.heater_name)
             raise
+        if self.backup_control is not None:
+            heater.set_control(self.backup_control)
+            logging.error("ApeControl: temperature_update not implemented. Restoring original controller for safety.")
+        else:
+            logging.critical("ApeControl: temperature_update not implemented. No backup controller available to restore!")
+        raise NotImplementedError("temperature_update must be implemented in the child class.")
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         """Return True if heater is still stabilizing (default: False)"""
