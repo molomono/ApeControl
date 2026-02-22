@@ -14,6 +14,7 @@ class BaseController(ABC):
         self.target_temp = None
         # Relevant objects
         self.heater = None
+        self.heater_max_power = None
         
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
