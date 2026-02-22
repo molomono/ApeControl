@@ -163,6 +163,7 @@ class PPControl(BaseController):
     # --- Logic for the individual states ---
     def _state_off(self, error, duration, read_time):
         """Off state: wait for non-zero target"""
+        self.set_pwm(read_time, 0.0)  # Always set hardware to off
         if error > 0:
             self._transition("max_power", read_time)
         return 0.0
@@ -207,5 +208,3 @@ class PPControl(BaseController):
         return (abs(temp_diff) > SETTLE_DELTA
                 or abs(self.prev_temp_deriv) > SETTLE_SLOPE)
     
-    #def set_pwm(self, read_time, value):
-    #    self.heater.set_pwm(read_time, value)
