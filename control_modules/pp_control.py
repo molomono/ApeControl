@@ -58,10 +58,10 @@ class PPControl(BaseController):
         }
 
         # Register the ready handler to perform the hijack after Klipper is fully initialized
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+        #self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
 
-    def handle_ready(self):
+    #def handle_ready(self):
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
