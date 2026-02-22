@@ -11,6 +11,7 @@ class ApeControl:
         self.name = config.get_name().split()[-1] # (heater) name
         self.algo = config.get('architecture', 'pid_control')
         self.old_control = None
+
         
         # Logic to dynamically load from the ape_modules folder
         if self.algo == 'pp_control':
