@@ -160,14 +160,14 @@ class ControlAutoTune:
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
         
         ################# This section must be changed for FF calibration #####################
-        #Ti = 0.5 * Tu
-        #Td = 0.125 * Tu
-        #Kp = 0.6 * Ku * PARAM_BASE
-        #Ki = Kp / Ti
-        #Kd = Kp * Td
+        Ti = 0.5 * Tu
+        Td = 0.125 * Tu
+        Kp = 0.6 * Ku * PARAM_BASE
+        Ki = Kp / Ti
+        Kd = Kp * Td
         logging.info("PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", Kss,Ku,Tu,omega_u,tau,L)
         
-        return Kss,Ku,Tu,omega_u,tau,L
+        return Kp, Ki, Kd
     
     def calc_final_fowdt(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
