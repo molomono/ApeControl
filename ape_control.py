@@ -12,26 +12,10 @@ class ApeControl:
             from .control_modules.pp_calibrate import PPCalibrate
             self.controller = PPControl(config)
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) 
-        elif arch_type == 'ss_ff_gain':
-            from .control_modules.ss_ff_gain import SSFFControl
-            self.controller = SSFFControl(config)
-        elif arch_type == 'lead_lag_control':
-            from .control_modules.lead_lag_control import LeadLagControl
-            self.controller = LeadLagControl(config)
-        elif arch_type == 'simple_ff_fb_control':
-            from .control_modules.simple_ff_fb_control import SimpleFFFBControl
-            self.controller = SimpleFFFBControl(config)
-        elif arch_type == 'mpc':
-            from .control_modules.control_mpc import ControlMPC, MpcCalibrate
-            # TODO: Build a abstract class which handles the interface between ApeControl modules and the original kalico MPC implementation
-            self.controller = self.exchange_controller(ControlMPC(config))
-            self.printer.add_object('mpc_calibrate', MpcCalibrate(config)) 
-        
+        elif arch_type == 'mpc-example':
+            pass # example line for adding addtional control modules
         else:
-            logging.error("Unknown architecture type specified: %s. Defaulting to PP-Control." % arch_type)
-            from .control_modules.pp_control import PPControl
-            self.controller = PPControl(config)
-
+            logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm." % arch_type)
 
     ### This function uses similar logic to the pid_calibrate script, exchanging the existing Controller for one of the ApeControl architectures. 
     # I feel like this should be moved into the BaseController, and forced to be called instead of install_hijack.

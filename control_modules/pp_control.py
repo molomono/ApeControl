@@ -1,8 +1,6 @@
 import math
 import logging
 from .base_controller import BaseController
-from .state_look_ahead import StateLookahead
-
 
 class PPControl(BaseController):
     def __init__(self, config):
