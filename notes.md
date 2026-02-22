@@ -21,9 +21,9 @@
 <details>
 <summary>Checklist: Solutions for maintaining compatibility and enabling runtime module loading</summary>
 
-- [ ] Ensure dynamic import logic: see ape_control.py, which loads the correct control module (and calibration object).
+-  Ensure dynamic import logic: see ape_control.py, which loads the correct control module (and calibration object).
 - [ ] Maintain backup of original control object for safe fallback (see `exchange_controller`)
-- [ ] Change the original monkey-patch of the update script to an actual heater.control module swap. see 3.
+- [x] Change the original monkey-patch of the update script to an actual heater.control module swap. see 3.
 
 ## 2.B Tests and validation 
 - [ ] Ensure that the control fallback works
@@ -38,10 +38,10 @@
 <summary>Checklist: Porting the monkey patch updating algorithm to mimic AutoTune's controller swap</summary>
 
 - [ ] Refactor controller exchange to store and restore original control safely
-- [ ] Make monkey patch logic deprecated
-- [ ] Remove or refactor `install_hijack` as needed (see comments in `ape_control.py`)
+- [x] Make monkey patch logic deprecated
+- [x] Remove or refactor `install_hijack` as needed (see comments in `ape_control.py`)
 - [ ] Implement safety logic to trigger backup controller if new one fails
-- [ ] Ensure compatibility with both legacy and new control architectures
+- [x] Ensure compatibility with both legacy and new control architectures
 
 </details>
 
