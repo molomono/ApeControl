@@ -164,7 +164,7 @@ class ControlAutoTune:
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
                        for pos in range(4, len(self.peaks))]
         midpoint_pos = sorted(cycle_times)[len(cycle_times)//2][1]
-        return self.calc_fowdt(midpoint_pos, Kss)
+        return self.calc_fowdt(midpoint_pos)
 
     
     def calc_pid(self, pos):
