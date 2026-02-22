@@ -45,8 +45,7 @@ class BaseController(ABC):
 
             # Safety Fallback: hand keys back to original PID
             pid_self.heater.set_pwm = self.real_set_pwm # Remove the dummy function, makes the heater-set_pwm function write to the heater again
-            self.orig_temp_update(read_time, temp, target_temp) # Call original PID logic
-            
+            self.orig_temp_update(read_time, temp, target_temp) # Call original PID logic            
 
     @abstractmethod
     def compute_control(self, pid_self, read_time, temp, target_temp):
