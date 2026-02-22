@@ -132,7 +132,6 @@ class ControlAutoTune:
             self.peak = -9999999.
         if len(self.peaks) < 4:
             return
-        #self.calc_pid(len(self.peaks)-1)  # <--- Why is this here
 
     def calc_fowdt(self, pos):
         temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
@@ -185,11 +184,11 @@ class ControlAutoTune:
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
         
         ################# This section must be changed for FF calibration #####################
-        Ti = 0.5 * Tu
-        Td = 0.125 * Tu
-        Kp = 0.6 * Ku * PARAM_BASE
-        Ki = Kp / Ti
-        Kd = Kp * Td
+        #Ti = 0.5 * Tu
+        #Td = 0.125 * Tu
+        #Kp = 0.6 * Ku * PARAM_BASE
+        #Ki = Kp / Ti
+        #Kd = Kp * Td
         
         return Kss,Ku,Tu,tau,L,omega_u
     
@@ -199,32 +198,6 @@ class ControlAutoTune:
         midpoint_pos = sorted(cycle_times)[len(cycle_times)//2][1]
         return self.calc_fowdt(midpoint_pos)
 
-    
-    def calc_pid(self, pos):
-        temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
-        time_diff = self.peaks[pos][1] - self.peaks[pos-2][1]
-        # Use Astrom-Hagglund method to estimate Ku and Tu
-        amplitude = .5 * abs(temp_diff)
-        Ku = 4. * self.heater_max_power / (math.pi * amplitude)
-        Tu = time_diff
-        # Use Ziegler-Nichols method to generate PID parameters
-        
-        ################# This section must be changed for FF calibration #####################
-        Ti = 0.5 * Tu
-        Td = 0.125 * Tu
-        Kp = 0.6 * Ku * PARAM_BASE
-        Ki = Kp / Ti
-        Kd = Kp * Td
-        logging.info("Autotune: raw=%f/%f Ku=%f Tu=%f  Kp=%f Ki=%f Kd=%f",
-                     temp_diff, self.heater_max_power, Ku, Tu, Kp, Ki, Kd)
-        
-        return Kp, Ki, Kd
-    
-    def calc_final_pid(self):
-        cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
-                       for pos in range(4, len(self.peaks))]
-        midpoint_pos = sorted(cycle_times)[len(cycle_times)//2][1]
-        return self.calc_pid(midpoint_pos)
     
     # Offline analysis helper
     def write_file(self, filename):

@@ -49,7 +49,7 @@ class PPControl(BaseController):
         self.t_ref = 0.0
 
     def handle_ready(self):
-        self.install_hijack()
+        # self.install_hijack()
         # self.exchange_controller()
 
         # Useful objects for proactive power compensation control logic

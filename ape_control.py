@@ -10,7 +10,7 @@ class ApeControl:
         if arch_type == 'pp_control':
             from .control_modules.pp_control import PPControl 
             from .control_modules.pp_calibrate import PPCalibrate
-            self.controller = PPControl(config)
+            self.exchange_controller(PPControl(config))
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) 
         elif arch_type == 'mpc-example':
             pass # example line for adding addtional control modules
@@ -36,6 +36,7 @@ class ApeControl:
         
         old_control = heater.set_control(new_controller) # exchange control objects
         new_controller.backup_control = old_control # store the old control object in the new controller for saftey fallback
+        logging.info("ApeControl: Successfully swapped controllers! On heater object '%s'",self.name)
         return new_controller
         
 

@@ -13,6 +13,7 @@
 - [ ] Document any hardcoded values or magic numbers:
     - algos: dict in heaters.py
     - printer.load_object(config,'pid_calibrate') in heaters.py
+- [ ] --Testing, but there seems to be an unneccesary call of self.calc_pid in the calibrate_pid.py file
 
 </details>
 
@@ -27,6 +28,8 @@
 ## 2.B Tests and validation 
 - [ ] Ensure that the control fallback works
 - [ ] Ensure that thermal runaway still is triggered
+- [x] Test the custom Calibration algorithm --> will it run
+- [ ] Test the custom Calibration algorithm --> How is the performance
 
 </details>
 
