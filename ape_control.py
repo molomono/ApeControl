@@ -31,7 +31,7 @@ class ApeControl:
         pheaters =  self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(self.name)
-        except
+        except:
             raise logging.error("Could not find heater: %s with name %s" % (self.name))
         
         old_control = heater.set_control(new_controller) # exchange control objects
