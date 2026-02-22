@@ -58,6 +58,7 @@ class PPControl(BaseController):
         }
 
         if self.fb_enable:
+            self.fb_pwm = 0.0
             from .pid_control import PIDControl
             self.feedback_controller = PIDControl(config)
             self.feedback_controller.set_pwm = lambda read_time, value: setattr(self, 'fb_pwm', value)   
@@ -71,7 +72,7 @@ class PPControl(BaseController):
             target_temp: Target temperature (same as self.target_temp after PID update)
         """
         #
-        if self.fb_enable: # pass inputs to the feedback controller.
+        if self.fb_enable: # pass inputs to the feedback controller. TODO: move to the ff_fb loop
             self.feedback_controller.temperature_update(read_time, temp, target_temp)
 
         # Check if target changed before updating
@@ -127,7 +128,8 @@ class PPControl(BaseController):
         Returns:
             Combined PWM value (feed-forward + captured PID feedback)
         """
-        u_fb_pid = self.captured_fb_pwm
+        # this is where the fb function should actually be called
+        u_fb_pid = self.fb_pwm
         
         # Access Feed Forward inputs
         fan_speed = self.part_fan.get_status(read_time)['speed']
