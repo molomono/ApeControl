@@ -45,19 +45,23 @@ class PPCalibrate:
         # Log and report results
         Ku, Tu, Kss, tau, L = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
-        logging.info("Autotune: final: Kp=%f Ki=%f Kd=%f", Kp, Ki, Kd)
+        logging.info("PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", Kss,Ku,Tu,omega_u,tau,L)
+        
         gcmd.respond_info(
             "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
             "The SAVE_CONFIG command will update the printer config file\n"
-            "with these parameters and restart the printer." % (Kp, Ki, Kd))
+            "with these parameters and restart the printer." % (Ku, Tu, Kss, tau, L))
         
         # Store results for SAVE_CONFIG
         cfgname = heater.get_name()
+        logging.info("PP-AutoTune: %s", cfgname)
         configfile = self.printer.lookup_object('configfile')
-        configfile.set(cfgname, 'control', 'pid')
-        configfile.set(cfgname, 'pid_Kp', "%.3f" % (Kp,))
-        configfile.set(cfgname, 'pid_Ki', "%.3f" % (Ki,))
-        configfile.set(cfgname, 'pid_Kd', "%.3f" % (Kd,))
+        #configfile.set(cfgname, 'control', 'pp_control')
+        #configfile.set(cfgname, 'Ku', "%.3f" % (Ku,))
+        #configfile.set(cfgname, 'Tu', "%.3f" % (Tu,))
+        configfile.set(cfgname, 'K_ss', "%.3f" % (Kss,))
+        #configfile.set(cfgname, 'tau', "%.3f" % (Kss,))
+        #configfile.set(cfgname, 'L', "%.3f" % (Kss,))
 
 
 TUNE_PID_DELTA = 5.0
@@ -165,9 +169,8 @@ class ControlAutoTune:
         Kp = 0.6 * Ku * PARAM_BASE
         Ki = Kp / Ti
         Kd = Kp * Td
-        logging.info("PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", Kss,Ku,Tu,omega_u,tau,L)
         
-        return Kp, Ki, Kd
+        return Kss,Ku,Tu,omega_u,tau,L
     
     def calc_final_fowdt(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
