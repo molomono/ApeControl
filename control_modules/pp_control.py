@@ -52,6 +52,7 @@ class PPControl(BaseController):
 
     def handle_ready(self):
         self.install_hijack()
+        # self.exchange_controller()
 
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')

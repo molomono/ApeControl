@@ -34,12 +34,13 @@ class PPCalibrate:
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
-        heater.set_control(old_control)
+        heater.set_control(old_control) # Restore actual controller after calibration test
         if write_file:
             calibrate.write_file('/tmp/heattest.txt')
         if calibrate.check_busy(0., 0., 0.):
             raise gcmd.error("pid_calibrate interrupted")
         
+        ########## Actual calibraiton logic, data has been collected in ControlAutoTune lists.
         # Log and report results
         Kp, Ki, Kd = calibrate.calc_final_pid()
         logging.info("Autotune: final: Kp=%f Ki=%f Kd=%f", Kp, Ki, Kd)
