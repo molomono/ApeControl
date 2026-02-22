@@ -18,7 +18,10 @@ class BaseController(ABC):
 
     def temperature_update(self, read_time, temp, target_temp):
         """Called by heater to update control logic and set PWM"""
-        raise NotImplementedError("temperature_update must be implemented in the child class.")
+        pheaters = self.printer.lookup_object('heaters')
+        heater = pheaters.lookup_heater(self.heater_name)
+        heater.set_control(self.backup_control)
+        raise NotImplementedError("temperature_update must be implemented in the child class, restoring original controller.")
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         """Return True if heater is still stabilizing (default: False)"""
