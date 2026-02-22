@@ -42,7 +42,8 @@ class PPCalibrate:
         
         ########## Actual calibraiton logic, data has been collected in ControlAutoTune lists.
         # Log and report results
-        Kp, Ki, Kd = calibrate.calc_final_pid()
+        Ku, Tu, Kss, tau, L = calibrate.calc_final_fowdt()
+        #Kp, Ki, Kd = calibrate.calc_final_pid()
         logging.info("Autotune: final: Kp=%f Ki=%f Kd=%f", Kp, Ki, Kd)
         gcmd.respond_info(
             "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
@@ -70,12 +71,13 @@ class ControlAutoTune:
         self.peak = 0.
         self.peak_time = 0.
         # Peak recording
-        self.peaks = []
+        self.peaks = [] # (self.peak, self.peak_time)
+        self.relay_events = [] # (pwm_value, self.peak_time)
         # Sample recording
         self.last_pwm = 0.
         self.pwm_samples = []
         self.temp_samples = []
-    # Heater control
+    # Heater control 
     def set_pwm(self, read_time, value):
         if value != self.last_pwm:
             self.pwm_samples.append(
@@ -105,11 +107,18 @@ class ControlAutoTune:
             if temp > self.peak:
                 self.peak = temp
                 self.peak_time = read_time
+
+        self.compute_steadystate()
+
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         if self.heating or len(self.peaks) < 12:
             return True
         return False
+    
     # Analysis
+    def compute_steadystate(self):
+        pass# for now
+    
     def check_peaks(self):
         self.peaks.append((self.peak, self.peak_time))
         if self.heating:
@@ -119,6 +128,45 @@ class ControlAutoTune:
         if len(self.peaks) < 4:
             return
         self.calc_pid(len(self.peaks)-1)
+
+    def calc_fowdt(self, pos, Kss):
+        temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
+        time_diff = self.peaks[pos][1] - self.peaks[pos-2][1]
+        # Use Astrom-Hagglund method to estimate Ku and Tu
+        amplitude = .5 * abs(temp_diff)
+        Ku = 4. * self.heater_max_power / (math.pi * amplitude)
+        Tu = time_diff
+
+        # Estimate Kss from on-off dutycycle to maintain averaged target temp
+        power_on_time = self.peaks[pos-1][1] - self.peaks[pos-2][1] # low to high peak period
+        Kss_est = power_on_time / Tu # power on time divided by the oscillation period
+        Kss = Kss_est
+
+        # Compute FOWDT model parameters
+        omega_u  = (2*math.pi) / Tu # critical frequency
+        gain_product = Kss * Ku
+        if gain_product <= 1.0: # TODO: catch the system if the gain product won't cause FOWDT oscillations
+            return None
+        tau = math.sqrt(math.pow(gain_product,2) - 1) / omega_u # Time constant
+        L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
+        
+        ################# This section must be changed for FF calibration #####################
+        #Ti = 0.5 * Tu
+        #Td = 0.125 * Tu
+        #Kp = 0.6 * Ku * PARAM_BASE
+        #Ki = Kp / Ti
+        #Kd = Kp * Td
+        logging.info("PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", Kss,Ku,Tu,omega_u,tau,L)
+        
+        return Kss,Ku,Tu,omega_u,tau,L
+    
+    def calc_final_fowdt(self):
+        cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
+                       for pos in range(4, len(self.peaks))]
+        midpoint_pos = sorted(cycle_times)[len(cycle_times)//2][1]
+        return self.calc_fowdt(midpoint_pos, Kss)
+
+    
     def calc_pid(self, pos):
         temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
         time_diff = self.peaks[pos][1] - self.peaks[pos-2][1]
@@ -137,10 +185,8 @@ class ControlAutoTune:
         logging.info("Autotune: raw=%f/%f Ku=%f Tu=%f  Kp=%f Ki=%f Kd=%f",
                      temp_diff, self.heater_max_power, Ku, Tu, Kp, Ki, Kd)
         
-        ########################################
         return Kp, Ki, Kd
     
-
     def calc_final_pid(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
                        for pos in range(4, len(self.peaks))]
