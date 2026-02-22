@@ -31,12 +31,6 @@ class PIDControl(BaseController):
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
 
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
-
-    def handle_ready(self):
-        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
-        self.heater_max_power = self.heater.get_max_power()
-
     def temperature_update(self, read_time, temp, target_temp):
         time_diff = read_time - self.prev_temp_time
         temp_diff = temp - self.prev_temp

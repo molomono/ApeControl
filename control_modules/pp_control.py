@@ -70,8 +70,8 @@ class PPControl(BaseController):
         self.gcode_move = self.printer.lookup_object('gcode_move')
         self.gcode = self.printer.lookup_object('gcode')
         self.reactor = self.printer.get_reactor()
-        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
-        self.heater_max_power = self.heater.get_max_power()
+        #self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        #self.heater_max_power = self.heater.get_max_power()
 
     def temperature_update(self, read_time, temp, target_temp):
         """The PP-Control implementation of Proactive Power Control

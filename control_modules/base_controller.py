@@ -13,8 +13,9 @@ class BaseController(ABC):
         self.target_heater = None # To be found during Klipper's 'ready' state
         self.target_temp = None
         # Relevant objects
-        self.heater = None
         
+        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        self.heater_max_power = self.heater.get_max_power()
 
     @abstractmethod
     def temperature_update(self, read_time, temp, target_temp):
