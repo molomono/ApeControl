@@ -95,7 +95,7 @@ class PPControl(BaseController):
 
         # Call the original PID to update its internal state and capture the PWM
         # This is critical: it updates pid_self.prev_temp, prev_temp_deriv, etc.
-        self.orig_temp_update(read_time, temp, target_temp)
+        #self.orig_temp_update(read_time, temp, target_temp)
 
         # Global Off Trigger
         if target_temp == 0:
