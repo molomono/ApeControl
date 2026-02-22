@@ -3,7 +3,7 @@ import logging
 class ApeControl:
     def __init__(self, config):
         self.printer = config.get_printer()
-        self.name = config.get_name().split()[1] # (heater) name
+        self.name = config.get_name().split()[-1] # (heater) name
         arch_type = config.get('architecture', 'pp_control')
         
         # Logic to dynamically load from the ape_modules folder
@@ -29,7 +29,12 @@ class ApeControl:
     # And i guess install_hijack isn't necissary either anymore. The exchange is handeld by ApeControl class.
     def exchange_controller(self, new_controller):
         # load objects
-        heater = self.printer.lookup_object('heaters').lookup_heater(self.name)
+        pheaters = self.printer.lookup_object('heaters')
+        try:
+            heater = pheaters.lookup_heater(self.name)
+        except self.printer.config_error as e:
+            pass
+            #raise gcmd.error(str(e))
         
         old_control = new_controller.heater.set_control(new_controller) # exchange control objects
         new_controller.backup_control = old_control # store the old control object in the new controller for saftey fallback
