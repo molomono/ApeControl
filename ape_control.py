@@ -1,3 +1,8 @@
+# ApeControl-Klipper Dynamic module/control algorithm loading script
+#
+# Author and code: Molomono
+#
+# This file may be distributed under the terms of the GNU GPLv3 license.
 import logging 
 
 class ApeControl:
@@ -29,10 +34,12 @@ class ApeControl:
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(self.name)
+            self.new_controller.heater = heater
+            self.old_control = heater.set_control(self.new_controller) # exchange control objects
         except self.printer.config_error as e:
             raise logging.error("%s Heater object could not be found for name %s",str(e), self.name)
     
-        self.old_control = heater.set_control(self.new_controller) # exchange control objects
+        
        
 
 def load_config_prefix(config):

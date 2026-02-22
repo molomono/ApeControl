@@ -1,8 +1,19 @@
+# ApeControl-Klipper modified PID class
+#
+# Original Author and code: Kevin O'Connor <kevin@koconnor.net>
+# https://github.com/Klipper3d/klipper/blob/master/klippy/extras/heaters.py
+#
+# Modifications for ApeControl compatiblity: Molomono
+#
+# This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
 from .base_controller import BaseController
 
 PID_PARAM_BASE = 255.
 AMBIENT_TEMP = 25.
+
+PID_SETTLE_DELTA = 1.
+PID_SETTLE_SLOPE = .1
 
 class PIDControl(BaseController):
     def __init__(self, config):
@@ -33,9 +44,8 @@ class PIDControl(BaseController):
         co = self.Kp * temp_err + self.Ki * temp_integ - self.Kd * temp_deriv
         bounded_co = max(0., min(self.heater_max_power, co))
         # Set PWM output (assumes heater object is accessible via self.printer)
-        pheaters = self.printer.lookup_object('heaters')
-        heater = pheaters.lookup_heater(self.heater_name)
-        heater.set_pwm(read_time, bounded_co)
+        self.set_pwm(read_time, bounded_co)
+        # optional self.heater.set_pwm(read_time, bounded_co)
         self.prev_temp = temp
         self.prev_temp_time = read_time
         self.prev_temp_deriv = temp_deriv
@@ -44,9 +54,8 @@ class PIDControl(BaseController):
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         temp_diff = target_temp - smoothed_temp
-        return abs(temp_diff) > 1.0 or abs(self.prev_temp_deriv) > 0.1
+        return (abs(temp_diff) > PID_SETTLE_DELTA
+                or abs(self.prev_temp_deriv) > PID_SETTLE_SLOPE)
 
     def set_pwm(self, read_time, value):
-        pheaters = self.printer.lookup_object('heaters')
-        heater = pheaters.lookup_heater(self.heater_name)
-        heater.set_pwm(read_time, value)
+        self.heater.set_pwm(read_time, value)

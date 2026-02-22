@@ -1,3 +1,8 @@
+# ApeControl-Klipper PP Control algorithm code
+#
+# Author and code: Molomono
+#
+# This file may be distributed under the terms of the GNU GPLv3 license.
 import math
 import logging
 from .base_controller import BaseController

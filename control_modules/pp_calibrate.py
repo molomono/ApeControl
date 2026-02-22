@@ -1,3 +1,9 @@
+# ApeControl-Klipper AutoTuning script for PP-control
+#
+# Original author and code: Kevin O'Connor <kevin@koconnor.net>
+# Derivative author and code: Molomono 
+# Modified but based on the original PID autocalibration code.
+# This file may be distributed under the terms of the GNU GPLv3 license.
 import math, logging
 import logging
 
