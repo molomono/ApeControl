@@ -29,8 +29,9 @@ class ApeControl:
     # And i guess install_hijack isn't necissary either anymore. The exchange is handeld by ApeControl class.
     def exchange_controller(self, new_controller):
         # load objects
+        logging.info("Heater name: %s", self.name)
         pheaters = self.printer.lookup_object('heaters')
-        heater = pheaters.lookup_heater(self.name)
+        heater = pheaters.lookup_heater(self.name.upper())
     
         old_control = heater.set_control(new_controller) # exchange control objects
         new_controller.backup_control = old_control # store the old control object in the new controller for saftey fallback
