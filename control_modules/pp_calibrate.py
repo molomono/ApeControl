@@ -65,7 +65,7 @@ class PPCalibrate:
         cfgname = "ape_control "+heater.get_name() # [ape_control heater_name]
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
-        configfile.set(cfgname, 'K_ss', "%.4f" % (Kss * 0.2,)) # take off 20 %
+        configfile.set(cfgname, 'K_ss', "%.4f" % (Kss * 0.8,)) # take off 20 %
         configfile.set(cfgname, 't_overshoot_up', "%.3f" % (t_overshoot_up,))
         configfile.set(cfgname, 'coast_time_up', "%.3f" % (coast_time_up,))
         configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
