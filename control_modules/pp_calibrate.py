@@ -70,6 +70,7 @@ class PPCalibrate:
         configfile.set(cfgname, 'coast_time_up', "%.3f" % (coast_time_up,))
         configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
         configfile.set(cfgname, 'coast_time_down', "%.3f" % (coast_time_down  - L/3,))
+        configfile.set(cfgname, 'min_duration', "%.3f" % (L,) )
 
 
 TUNE_PID_DELTA = 5.0

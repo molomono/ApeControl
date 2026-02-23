@@ -32,8 +32,8 @@ class PPControl(BaseController):
         self.coast_time_down = config.getfloat('coast_time_down', 0.0)
 
         # Regulation max error window
-        self.t_delta_regulate = config.getfloat('t_delta_regulate', 5.0)
-        self.min_regulation_duration = config.getfloat('min_duration', 5.0) # Minimum duration to stay in a state before transitioning (prevents chatter)
+        self.t_delta_regulate = config.getfloat('t_delta_regulate', 10.0)
+        self.min_regulation_duration = config.getfloat('min_duration', 10.0) # Minimum duration to stay in a state before transitioning (prevents chatter)
 
         # On off switch for feed-back control
         self.fb_enable = config.getboolean('fb_enable', True)
