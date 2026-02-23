@@ -51,7 +51,7 @@ class PPCalibrate:
         
         ########## Actual calibraiton logic, data has been collected in ControlAutoTune lists.
         # Log and report results
-        Kss,Ku,Tu,tau,L,omega_u = calibrate.calc_final_fowdt()
+        Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
         autotune_report = "%s: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
         logging.info(autotune_report)
@@ -65,11 +65,11 @@ class PPCalibrate:
         cfgname = heater.get_name()
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
-        #configfile.set(cfgname, 'Ku', "%.3f" % (Ku,))
-        #configfile.set(cfgname, 'Tu', "%.3f" % (Tu,))
         configfile.set(cfgname, 'K_ss', "%.3f" % (Kss,))
-        #configfile.set(cfgname, 'tau', "%.3f" % (Kss,))
-        #configfile.set(cfgname, 'L', "%.3f" % (Kss,))
+        configfile.set(cfgname, 't_overshoot_up', "%.3f" % (t_overshoot_up,))
+        configfile.set(cfgname, 'coast_time_up', "%.3f" % (coast_time_up,))
+        configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
+        configfile.set(cfgname, 'coast_time_down', "%.3f" % (coast_time_down  - L/3,))
 
 
 TUNE_PID_DELTA = 5.0
@@ -181,7 +181,11 @@ class ControlAutoTune:
 
         time_to_peak_rising_edge = first_peak_time-self.pwm_samples[1][0]
         time_to_peak_falling_edge = second_peak_time-self.pwm_samples[2][0]
-        logging.info("%s: t_overshoot_up %.3f, coast_time_up %.3f, t_overshoot_down %.3f, coast_time_down %.3f", self.algo_name, first_peak_temp-self.target, time_to_peak_rising_edge, self.target-TUNE_PID_DELTA - second_peak_temp, time_to_peak_falling_edge)
+        t_overshoot_up = first_peak_temp-self.target
+        t_overshoot_down =  time_to_peak_rising_edge
+        coast_time_up = self.target-TUNE_PID_DELTA - second_peak_temp
+        coast_time_down = time_to_peak_falling_edge
+        logging.info("%s: t_overshoot_up %.3f, coast_time_up %.3f, t_overshoot_down %.3f, coast_time_down %.3f", self.algo_name, t_overshoot_up, coast_time_up, t_overshoot_down, coast_time_down)
         logging.info("%s: actuator duty cycle: %.3f", self.algo_name, pulse_width_second_pulse/(pulse_state_first_pulse + pulse_state_second_pulse))
         #TODO: Look at the time between switching the power off during a rising edge
         # compute t_overshoot_up --> peak temperature above our setpoint.
@@ -236,7 +240,7 @@ class ControlAutoTune:
         # I use Kss as 1/K
         # u_ff = Kss *( 1 + s*tau )* (Q-filter ) * ref
         # Q_filter = 1 / (1+s*tau_f)
-        return Kss,Ku,Tu,tau,L,omega_u
+        return Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down
     
     def calc_final_fowdt(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
