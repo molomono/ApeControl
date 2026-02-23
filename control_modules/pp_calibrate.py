@@ -228,3 +228,4 @@ def load_config(config):
 # TODO: K_ss should hold temp within a given Temp_delta, come to a rest and then turn on the part fan
 # The temp difference between fan off and fan on is used to compute K_fan
 # TODO: Optional K_ev calculation by feeding filament and watching temperature drop.
+# TODO: Include the PID tuner lines, I should compute some estimate for Kp, Ki, Kd if proactive power ff is turned on.
