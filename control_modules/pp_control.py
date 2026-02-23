@@ -22,7 +22,7 @@ class PPControl(BaseController):
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.k_fan = config.getfloat('k_fan', 0.0)
         self.k_ev = config.getfloat('k_ev', 0.0)
-        self.ev_smoothing = config.getfloat('ev_smoothing', 0.1)
+        self.ev_smoothing = config.getfloat('ev_smoothing', 0.075)
         self.dt_first_layer = config.getfloat('dt_first_layer', 1.5)
 
         # Switching Logic Parameters
@@ -147,7 +147,7 @@ class PPControl(BaseController):
             fist_layer_compensation = 0.0
 
         # Low-pass filter the error due to stuttery velocity readings. This should be solved by using look-ahead velocity for some known time constant beween power and temperature reading.
-        self.e_velocity_filtered = min(0.0, (1 - self.ev_smoothing) * self.e_velocity_filtered + self.ev_smoothing * e_velocity)
+        self.e_velocity_filtered = max(0.0, (1 - self.ev_smoothing) * self.e_velocity_filtered + self.ev_smoothing * e_velocity)
         # Feed forward control logic
         u_ff = (self.target_temp - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + self.e_velocity_filtered * self.k_ev
 

@@ -53,7 +53,7 @@ class PPCalibrate:
         # Log and report results
         Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down, pid_kp, pid_ki, pid_kd = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
-        autotune_report = "%s: Kss=%.4f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
+        autotune_report = "%s: Kss=%.6f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
         logging.info(autotune_report)
         
         autotune_report_pid = "%s: AMIGO-PID values Kp=%.3f, Ki=%.3f, Kd=%.3f" % (calibrate.algo_name, pid_kp, pid_ki, pid_kd)
@@ -67,7 +67,7 @@ class PPCalibrate:
         cfgname = "ape_control "+heater.get_name() # [ape_control heater_name]
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
-        configfile.set(cfgname, 'K_ss', "%.4f" % (Kss,))
+        configfile.set(cfgname, 'K_ss', "%.6f" % (Kss,))
         configfile.set(cfgname, 't_overshoot_up', "%.3f" % (t_overshoot_up,))
         configfile.set(cfgname, 'coast_time_up', "%.3f" % (coast_time_up,))
         configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
