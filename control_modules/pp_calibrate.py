@@ -62,7 +62,7 @@ class PPCalibrate:
             "with these parameters and restart the printer.")
         
         # Store results for SAVE_CONFIG
-        cfgname = heater.get_name()
+        cfgname = "ape_control "+heater.get_name() # [ape_control heater_name]
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
         configfile.set(cfgname, 'K_ss', "%.3f" % (Kss,))
@@ -263,10 +263,9 @@ def load_config(config):
     return PPCalibrate(config)
 
 
-# TODO: For the PP state-logic calibration i need to save the varibles to config 
+# TODO: use self.temp_samples average temp between first high peak and last peak times to copute K_ss estimate
 # TODO: Add a steady-state calibration test which holds target temp with ss sensitivity value
 # -- K_ss should be computed from the average duty cycle and average temperature during htis period
 # TODO: K_ss should hold temp within a given Temp_delta, come to a rest and then turn on the part fan
 # The temp difference between fan off and fan on is used to compute K_fan
 # TODO: Optional K_ev calculation by feeding filament and watching temperature drop.
-# TODO: Include the PID tuner lines, I should compute some estimate for Kp, Ki, Kd if proactive power ff is turned on.
