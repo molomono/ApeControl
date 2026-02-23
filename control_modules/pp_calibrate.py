@@ -203,7 +203,7 @@ class ControlAutoTune:
         # compute t_overshoot_up --> peak temperature above our setpoint.
         # compute t_overshoot_down --> peak temperature below our setpoint-TUNE_PID_DELTA
 
-        duty_cycle = pulse_width / Tu # pulse width divided by the period
+        duty_cycle = pulse_width_second_pulse / Tu # pulse width divided by the period
         Kss_est =  duty_cycle / self.get_avg_temp(first_off_switch, last_off_switch) # estimated steady state power ratio of max power
         Kss = Kss_est
         # Compute FOWDT model parameters
