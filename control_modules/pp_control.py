@@ -132,8 +132,11 @@ class PPControl(BaseController):
             Combined PWM value (feed-forward + captured PID feedback)
         """
         # this is where the fb function should actually be called
-        u_fb_pid = self.fb_pwm
-        
+        if self.fb_enable:
+            u_fb_pid = self.fb_pwm
+        else:
+            u_fb_pid = 0.0
+
         # Access Feed Forward inputs
         fan_speed = self.part_fan.get_status(read_time)['speed']
         e_velocity = self.printer.lookup_object('motion_report').get_status(read_time)['live_extruder_velocity'] # realtime, we can also use look-ahead in later versions
