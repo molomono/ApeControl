@@ -15,6 +15,8 @@ class PPControl(BaseController):
     def __init__(self, config):
         # Initialize the base (hijacks Klipper)
         super().__init__(config)
+        # Hardcoded Params
+        self.algo_name = "PP-Control"
 
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
@@ -147,7 +149,7 @@ class PPControl(BaseController):
         u_ff = (self.target_temp - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + self.e_velocity_filtered * self.k_ev
 
         
-        logging.info("PP-Control Control Effort: PID_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (u_fb_pid, u_ff, self.e_velocity_filtered * self.k_ev))
+        logging.info("%s: Control Effort: PID_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (self.algo_name, u_fb_pid, u_ff, self.e_velocity_filtered * self.k_ev))
         
         if not self.fb_enable:
             return u_ff
@@ -157,7 +159,7 @@ class PPControl(BaseController):
     def _transition(self, next_state, read_time):
         """Transition to a new state and log the change"""
         if self.state != next_state:
-            logging.info("[%.3f] PP-Control state transition: %s -> %s" % (read_time, self.state, next_state))
+            logging.info("[%.3f] %s: state transition: %s -> %s" % (read_time, self.algo_name, self.state, next_state))
             self.state = next_state
             self.last_state_change = read_time
 

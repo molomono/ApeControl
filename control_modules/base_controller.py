@@ -10,10 +10,10 @@ class BaseController(ABC):
     def __init__(self, config):
         self.printer = config.get_printer()
         self.heater_name = config.get_name().split()[-1]
-        self.target_heater = None # To be found during Klipper's 'ready' state
         self.target_temp = None
         # Relevant objects
         self.heater = None
+        # Universal config parameters
         self.heater_max_power = config.getfloat('max_power', 1.0)
         
         self.printer.register_event_handler("klippy:ready", self.handle_ready)

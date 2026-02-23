@@ -18,6 +18,10 @@ PID_SETTLE_SLOPE = .1
 class PIDControl(BaseController):
     def __init__(self, config):
         super().__init__(config)
+        # Hardcoded Params
+        self.algo_name = "PID-Control"
+        
+        # Config Params
         self.Kp = config.getfloat('pid_Kp') / PID_PARAM_BASE
         self.Ki = config.getfloat('pid_Ki') / PID_PARAM_BASE
         self.Kd = config.getfloat('pid_Kd') / PID_PARAM_BASE

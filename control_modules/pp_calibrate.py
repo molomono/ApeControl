@@ -51,7 +51,7 @@ class PPCalibrate:
         # Log and report results
         Kss,Ku,Tu,tau,L,omega_u = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
-        logging.info("PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", Kss,Ku,Tu,omega_u,tau,L)
+        logging.info("%s: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
         
         gcmd.respond_info(
             "PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f\n"
@@ -60,7 +60,6 @@ class PPCalibrate:
         
         # Store results for SAVE_CONFIG
         cfgname = heater.get_name()
-        logging.info("PP-AutoTune: %s", cfgname)
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
         #configfile.set(cfgname, 'Ku', "%.3f" % (Ku,))
@@ -74,6 +73,7 @@ TUNE_PID_DELTA = 5.0
 
 class ControlAutoTune:
     def __init__(self, heater, target):
+        self.algo_name = "PP-Autotune"
         self.heater = heater
         self.target = target # used for Kss computation later
         self.heater_max_power = heater.get_max_power()
@@ -163,7 +163,7 @@ class ControlAutoTune:
         #TODO: Change the above logic to use:
         #self.pwm_samples = (event_time, value)
         # Load these values self.pwm_samples[pos]
-        logging.info("PP-Autotuen: pwm_samples: %s", self.pwm_samples)
+        logging.info("%s: pwm_samples: %s", self.algo_name, self.pwm_samples)
         # Compute the ratio of on to off time. This is our Kss - sensitivty
 
 
@@ -171,30 +171,24 @@ class ControlAutoTune:
         # compute t_overshoot_up --> peak temperature above our setpoint.
         # compute t_overshoot_down --> peak temperature below our setpoint-TUNE_PID_DELTA
 
-        logging.info("PP-AutoTune: Pulse_width: %f ",pulse_width)
+        logging.info("%s: Pulse_width: %f ", self.algo_name, pulse_width)
         duty_cycle = pulse_width / Tu # pulse width divided by the period
-        logging.info("PP-AutoTune: Duty_cycle: %f ",duty_cycle)
+        logging.info("%s: Duty_cycle: %f ", self.algo_name, duty_cycle)
         Kss_est =  duty_cycle / self.target # estimated steady state power ratio of max power
         Kss = Kss_est
-        logging.info("PP-AutoTune: Kss: %f ",Kss)
+        logging.info("%s: Kss: %f ", self.algo_name, Kss)
         # Compute FOWDT model parameters
         omega_u  = (2*math.pi) / Tu # critical frequency
-        logging.info("PP-AutoTune: omega_u: %f ",omega_u)
+        logging.info("%s: omega_u: %f ", self.algo_name, omega_u)
         K = (self.target - TEMP_AMBIENT) / max(duty_cycle, 0.001)
-        logging.info("PP-AutoTune: K=%f", K)
+        logging.info("%s: K=%f", K)
         gain_product = K * Ku
-        logging.info("PP-AutoTune: gain_product: %f ",gain_product)
-        #if gain_product <= 1.0: # TODO: catch the system if the gain product won't cause FOWDT oscillations
-        #    return None
+        logging.info("%s: gain_product: %f ", self.algo_name, gain_product)
+
+        if gain_product <= 1.0:
+            raise logging.error("%s: AutoTune failed measured gain-product is too low.", self.algo_name)
         tau = math.sqrt(gain_product**2 - 1) / omega_u # Time constant
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
-        
-        ################# This section must be changed for FF calibration #####################
-        #Ti = 0.5 * Tu
-        #Td = 0.125 * Tu
-        #Kp = 0.6 * Ku * PARAM_BASE
-        #Ki = Kp / Ti
-        #Kd = Kp * Td
         
         return Kss,Ku,Tu,tau,L,omega_u
     
