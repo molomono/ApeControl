@@ -220,3 +220,11 @@ class ControlAutoTune:
 
 def load_config(config):
     return PPCalibrate(config)
+
+
+# TODO: For the PP state-logic calibration i need to save the varibles to config 
+# TODO: Add a steady-state calibration test which holds target temp with ss sensitivity value
+# -- K_ss should be computed from the average duty cycle and average temperature during htis period
+# TODO: K_ss should hold temp within a given Temp_delta, come to a rest and then turn on the part fan
+# The temp difference between fan off and fan on is used to compute K_fan
+# TODO: Optional K_ev calculation by feeding filament and watching temperature drop.
