@@ -182,7 +182,7 @@ class ControlAutoTune:
         time_to_peak_rising_edge = first_peak_time-self.pwm_samples[1][0]
         time_to_peak_falling_edge = second_peak_time-self.pwm_samples[2][0]
         logging.info("%s: t_overshoot_up %.3f, coast_time_up %.3f, t_overshoot_down %.3f, coast_time_down %.3f", self.algo_name, first_peak_temp-self.target, time_to_peak_rising_edge, self.target-TUNE_PID_DELTA - second_peak_temp, time_to_peak_falling_edge)
-        logging.info("%s: actuator duty cycle: %.3f", pulse_width_second_pulse/(pulse_state_first_pulse + pulse_state_second_pulse))
+        logging.info("%s: actuator duty cycle: %.3f", self.algo_name, pulse_width_second_pulse/(pulse_state_first_pulse + pulse_state_second_pulse))
         #TODO: Look at the time between switching the power off during a rising edge
         # compute t_overshoot_up --> peak temperature above our setpoint.
         # compute t_overshoot_down --> peak temperature below our setpoint-TUNE_PID_DELTA
