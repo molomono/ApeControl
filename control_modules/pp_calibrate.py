@@ -158,15 +158,16 @@ class ControlAutoTune:
         Tu = time_diff
        
         # Estimate Kss from on-off dutycycle to maintain averaged target temp
-        if start_on_peak:
-            pulse_width = 1 - self.peaks[pos][1] - self.peaks[pos-1][1]
-        else:
-            pulse_width = self.peaks[pos][1] - self.peaks[pos-1][1]
+        #if start_on_peak:
+        #    pulse_width = 1 - self.peaks[pos][1] - self.peaks[pos-1][1]
+        #else:
+        pulse_width = self.peaks[pos][1] - self.peaks[pos-1][1]
 
         #TODO: Change the above logic to use:
         #self.pwm_samples = (event_time, value)
         # Load these values self.pwm_samples[pos]
         logging.info("%s: pwm_samples: %s", self.algo_name, self.pwm_samples)
+        logging.info("%s: peaks: %s", self.algo_name, self.peaks)
         # Compute the ratio of on to off time. This is our Kss - sensitivty
 
 
