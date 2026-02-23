@@ -163,6 +163,8 @@ class PPControl(BaseController):
         """Transition to a new state and log the change"""
         if self.state != next_state:
             logging.info("[%.3f] %s: state transition: %s -> %s" % (read_time, self.algo_name, self.state, next_state))
+            if (next_state is "off" or next_state is "coast_up" or next_state is "coast_down"): # reset integrator to avoid carying prexisting errors into new control states.
+                self.feedback_controller.prev_temp_integ = 0.
             self.state = next_state
             self.last_state_change = read_time
 
