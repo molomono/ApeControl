@@ -36,16 +36,18 @@ class PPCalibrate:
         # Create a new instance of the AutoTune class.
         calibrate = ControlAutoTune(heater, target)
         old_control = heater.set_control(calibrate)
+        logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
         try:
             pheaters.set_temperature(heater, target, True)
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
         heater.set_control(old_control) # Restore actual controller after calibration test
+        logging.info("ApeControl: Heater object '%s' controller has been restored to %s", heater_name, old_control.algo_name)
         if write_file:
             calibrate.write_file('/tmp/heattest.txt')
         if calibrate.check_busy(0., 0., 0.):
-            raise gcmd.error("pid_calibrate interrupted")
+            raise gcmd.error("%s interrupted"%(calibrate.algo_name))
         
         ########## Actual calibraiton logic, data has been collected in ControlAutoTune lists.
         # Log and report results
@@ -74,7 +76,7 @@ TUNE_PID_DELTA = 5.0
 
 class ControlAutoTune:
     def __init__(self, heater, target):
-        self.algo_name = "PP-Autotune"
+        self.algo_name = "PP-AutoTune"
         self.heater = heater
         self.target = target # used for Kss computation later
         self.heater_max_power = heater.get_max_power()
@@ -172,19 +174,13 @@ class ControlAutoTune:
         # compute t_overshoot_up --> peak temperature above our setpoint.
         # compute t_overshoot_down --> peak temperature below our setpoint-TUNE_PID_DELTA
 
-        logging.info("%s: Pulse_width: %f ", self.algo_name, pulse_width)
         duty_cycle = pulse_width / Tu # pulse width divided by the period
-        logging.info("%s: Duty_cycle: %f ", self.algo_name, duty_cycle)
         Kss_est =  duty_cycle / self.target # estimated steady state power ratio of max power
         Kss = Kss_est
-        logging.info("%s: Kss: %f ", self.algo_name, Kss)
         # Compute FOWDT model parameters
         omega_u  = (2*math.pi) / Tu # critical frequency
-        logging.info("%s: omega_u: %f ", self.algo_name, omega_u)
         K = (self.target - TEMP_AMBIENT) / max(duty_cycle, 0.001)
-        logging.info("%s: K=%f", K)
         gain_product = K * Ku
-        logging.info("%s: gain_product: %f ", self.algo_name, gain_product)
 
         if gain_product <= 1.0:
             raise logging.error("%s: AutoTune failed measured gain-product is too low.", self.algo_name)
