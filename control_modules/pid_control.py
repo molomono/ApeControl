@@ -45,15 +45,15 @@ class PIDControl(BaseController):
         temp_err = target_temp - temp
         temp_integ = self.prev_temp_integ + temp_err * time_diff
         temp_integ = max(0., min(self.temp_integ_max, temp_integ))
-        co = self.Kp * temp_err + self.Ki * temp_integ - self.Kd * temp_deriv
-        bounded_co = max(0., min(self.heater_max_power, co))
+        self.co = self.Kp * temp_err + self.Ki * temp_integ - self.Kd * temp_deriv
+        bounded_co = max(0., min(self.heater_max_power, self.co))
         # Set PWM output (assumes heater object is accessible via self.printer)
         self.set_pwm(read_time, bounded_co)
         # optional self.heater.set_pwm(read_time, bounded_co)
         self.prev_temp = temp
         self.prev_temp_time = read_time
         self.prev_temp_deriv = temp_deriv
-        if co == bounded_co:
+        if self.co == bounded_co:
             self.prev_temp_integ = temp_integ
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
