@@ -133,7 +133,7 @@ class PPControl(BaseController):
         # this is where the fb function should actually be called
         if self.fb_enable:
             u_fb_pid = self.fb_pwm
-            u_fb_bidirection = self.max(-self.heater_max_power, min(self.heater_max_power, self.feedback_controller.co))
+            u_fb_bidirection = max(-self.heater_max_power, min(self.heater_max_power, self.feedback_controller.co))
         else:
             u_fb_pid = 0.0
 
