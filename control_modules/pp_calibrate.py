@@ -51,12 +51,13 @@ class PPCalibrate:
         # Log and report results
         Kss,Ku,Tu,tau,L,omega_u = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
-        logging.info("%s: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f", calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
+        autotune_report = "%s: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
+        logging.info(autotune_report)
         
         gcmd.respond_info(
-            "PP-AutoTune: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f\n"
+            autotune_report + "\n"
             "The SAVE_CONFIG command will update the printer config file\n"
-            "with these parameters and restart the printer." % (Kss, Ku, Tu, omega_u, tau, L))
+            "with these parameters and restart the printer.")
         
         # Store results for SAVE_CONFIG
         cfgname = heater.get_name()
