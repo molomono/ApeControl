@@ -86,7 +86,7 @@ class ControlAutoTune:
         self.peak = 0.
         self.peak_time = 0.
         # Peak recording
-        self.peaks = [] # (self.peak, self.peak_time)
+        self.peaks = [] # (temp, time)
         # Sample recording
         self.last_pwm = 0.
         self.pwm_samples = []
@@ -169,7 +169,20 @@ class ControlAutoTune:
         logging.info("%s: pwm_samples: %s", self.algo_name, self.pwm_samples)
         logging.info("%s: peaks: %s", self.algo_name, self.peaks)
         # Compute the ratio of on to off time. This is our Kss - sensitivty
+        first_peak_temp = self.peaks[0][0]
+        first_peak_time = self.peaks[0][1]
+        pulse_width_first_pulse =  self.pwm_samples[2][0] - self.pwm_samples[1][0]
+        pulse_state_first_pulse =  self.pwm_samples[1][1]
 
+        second_peak_temp = self.peaks[1][0]
+        second_peak_time = self.peaks[1][1]
+        pulse_width_second_pulse =  self.pwm_samples[3][0] - self.pwm_samples[2][0]
+        pulse_state_second_pulse =  self.pwm_samples[2][1]
+        time_diff = self.peaks[1][0] - self.peaks[1][1]
+
+        time_to_peak_rising_edge = first_peak_time-self.pwm_samples[1][0]
+        time_to_peak_falling_edge = second_peak_time-self.pwm_samples[2][0]
+        logging.info("%s: t_overshoot_up %.3f, coast_time_up %.3f, t_overshoot_down %.3f, coast_time_down %.3f", self.algo_name, first_peak_temp-self.target, time_to_peak_rising_edge, self.target-TUNE_PID_DELTA - second_peak_temp, time_to_peak_falling_edge)
 
         #TODO: Look at the time between switching the power off during a rising edge
         # compute t_overshoot_up --> peak temperature above our setpoint.
