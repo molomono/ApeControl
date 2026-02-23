@@ -53,7 +53,7 @@ class PPCalibrate:
         # Log and report results
         Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
-        autotune_report = "%s: Kss=%.3f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
+        autotune_report = "%s: Kss=%.4f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
         logging.info(autotune_report)
         
         gcmd.respond_info(
@@ -65,7 +65,7 @@ class PPCalibrate:
         cfgname = "ape_control "+heater.get_name() # [ape_control heater_name]
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
-        configfile.set(cfgname, 'K_ss', "%.3f" % (Kss,))
+        configfile.set(cfgname, 'K_ss', "%.4f" % (Kss * 0.2,)) # take off 20 %
         configfile.set(cfgname, 't_overshoot_up', "%.3f" % (t_overshoot_up,))
         configfile.set(cfgname, 'coast_time_up', "%.3f" % (coast_time_up,))
         configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
@@ -173,6 +173,8 @@ class ControlAutoTune:
         # Compute the ratio of on to off time. This is our Kss - sensitivty
         first_peak_temp = self.peaks[2][0]
         first_peak_time = self.peaks[2][1]
+        first_off_switch = self.pwm_samples[1][0]
+        last_off_switch  = self.pwm_samples[-1][0]
         pulse_width_first_pulse =  self.pwm_samples[2][0] - self.pwm_samples[1][0]
         pulse_state_first_pulse =  self.pwm_samples[1][1]
 
@@ -194,7 +196,7 @@ class ControlAutoTune:
         # compute t_overshoot_down --> peak temperature below our setpoint-TUNE_PID_DELTA
 
         duty_cycle = pulse_width / Tu # pulse width divided by the period
-        Kss_est =  duty_cycle / self.target # estimated steady state power ratio of max power
+        Kss_est =  duty_cycle / self.get_avg_temp(first_off_switch, last_off_switch) # estimated steady state power ratio of max power
         Kss = Kss_est
         # Compute FOWDT model parameters
         omega_u  = (2*math.pi) / Tu # critical frequency
@@ -260,10 +262,17 @@ class ControlAutoTune:
         f.write('\n'.join(pwm + out))
         f.close()
 
+    def get_avg_temp(self, t_start, t_end):
+        # Filter temps within the time range
+        temps = [temp for temp, time in self.temp_samples if t_start <= time <= t_end]
+        # Return average, or 0/None if no samples found to avoid DivisionByZero
+        return sum(temps) / len(temps) if temps else 0.0
+
 def load_config(config):
     return PPCalibrate(config)
 
 
+# TODO: Modify calculations to use ambient temperature --> more important for heated enclosures though
 # TODO: use self.temp_samples average temp between first high peak and last peak times to copute K_ss estimate
 # TODO: Add a steady-state calibration test which holds target temp with ss sensitivity value
 # -- K_ss should be computed from the average duty cycle and average temperature during htis period
