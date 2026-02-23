@@ -264,7 +264,7 @@ class ControlAutoTune:
 
     def get_avg_temp(self, t_start, t_end):
         # Filter temps within the time range
-        temps = [temp for temp, time in self.temp_samples if t_start <= time <= t_end]
+        temps = [temp for time, temp in self.temp_samples if t_start <= time <= t_end]
         # Return average, or 0/None if no samples found to avoid DivisionByZero
         return sum(temps) / len(temps) if temps else 0.0
 
