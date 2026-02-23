@@ -51,13 +51,15 @@ class PPCalibrate:
         
         ########## Actual calibraiton logic, data has been collected in ControlAutoTune lists.
         # Log and report results
-        Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down = calibrate.calc_final_fowdt()
+        Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down, pid_kp, pid_ki, pid_kd = calibrate.calc_final_fowdt()
         #Kp, Ki, Kd = calibrate.calc_final_pid()
         autotune_report = "%s: Kss=%.4f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
         logging.info(autotune_report)
         
+        autotune_report_pid = "%s: AMIGO-PID values Kp=%.3f, Ki=%.3f, Kd=%.3f" % (calibrate.algo_name, pid_kp, pid_ki, pid_kd)
+        logging.info(autotune_report_pid)
         gcmd.respond_info(
-            autotune_report + "\n"
+            autotune_report + "\n" + autotune_report_pid + "\n"
             "The SAVE_CONFIG command will update the printer config file\n"
             "with these parameters and restart the printer.")
         
@@ -71,6 +73,12 @@ class PPCalibrate:
         configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
         configfile.set(cfgname, 'coast_time_down', "%.3f" % (coast_time_down  - L/3,))
         configfile.set(cfgname, 'min_duration', "%.3f" % (L,) )
+        configfile.set(cfgname, 'fb_enable', "True")
+        configfile.set(cfgname, 'pid_kp', "%.3f" % (pid_kp,) )
+        configfile.set(cfgname, 'pid_ki', "%.3f" % (pid_ki,) )
+        configfile.set(cfgname, 'pid_kd', "%.3f" % (pid_kd,) )
+ 
+        
         
 
 
@@ -244,7 +252,7 @@ class ControlAutoTune:
         # I use Kss as 1/K
         # u_ff = Kss *( 1 + s*tau )* (Q-filter ) * ref
         # Q_filter = 1 / (1+s*tau_f)
-        return Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down
+        return Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down, Kp, Ki, Kd
     
     def calc_final_fowdt(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)

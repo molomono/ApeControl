@@ -22,9 +22,9 @@ class PIDControl(BaseController):
         self.algo_name = "PID-Control"
         
         # Config Params
-        self.Kp = config.getfloat('pid_Kp') / PID_PARAM_BASE
-        self.Ki = config.getfloat('pid_Ki') / PID_PARAM_BASE
-        self.Kd = config.getfloat('pid_Kd') / PID_PARAM_BASE
+        self.Kp = config.getfloat('pid_Kp', 0.0) / PID_PARAM_BASE
+        self.Ki = config.getfloat('pid_Ki', 0.0) / PID_PARAM_BASE
+        self.Kd = config.getfloat('pid_Kd', 0.0) / PID_PARAM_BASE
         self.min_deriv_time = config.getfloat('pid_deriv_time', 2., above=0.)
         self.temp_integ_max = 0.
         
