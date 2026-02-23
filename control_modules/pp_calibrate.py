@@ -274,6 +274,8 @@ class ControlAutoTune:
         # Filter temps within the time range
         temps = [temp for time, temp in self.temp_samples if t_start <= time <= t_end]
         # Return average, or 0/None if no samples found to avoid DivisionByZero
+        logging.info("%s: Average Temp = %.3f", self.algo_name, sum(temps) / len(temps))
+        
         return sum(temps) / len(temps) if temps else 0.0
 
 def load_config(config):
