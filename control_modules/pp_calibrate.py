@@ -199,7 +199,43 @@ class ControlAutoTune:
             raise logging.error("%s: AutoTune failed measured gain-product is too low.", self.algo_name)
         tau = math.sqrt(gain_product**2 - 1) / omega_u # Time constant
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
+
+        ################# Leaving this here for later PID tuning #####################
+        #Ti = 0.5 * Tu
+        #Td = 0.125 * Tu
+        #Kp = 0.6 * Ku * PARAM_BASE
+        #Ki = Kp / Ti
+        #Kd = Kp * Td
         
+        ## Classic Ziegler-Nichols Table
+        #Controller,Kc​ (Kp​),   Ti​,        Td​,         Ki​ (Kc​/Ti​),  Kd​ (Kc​⋅Td​)
+        #P          0.5 Ku​,    inf,       0,          0,           0
+        #PI         0.45 Ku​,   0.83 Tu​,   0,          0.54 Ku​/Tu​,  0
+        #PID        0.6 Ku​,    0.5 Tu​,    0.125 Tu​,   1.2 Ku​/Tu​,   0.075Ku​⋅Tu​
+        #
+        ## Tyreus-Luyben Values -- More conservative than Ziegler-Nichols
+        Kp =  0.31*Ku * PARAM_BASE
+        Ti =  2.2 *Tu
+        Td =  Tu/6.3
+        Ki = Kp / Ti
+        Kd = Kp * Td
+        logging.info("%s: PID Tyreus-Luyben values: Kp: %.3f, Ki: %.3f, Kd: %.3f", self.algo_name, Kp, Ki, Kd)
+        
+        ## AMIGO method FF+PID Tuning vars:
+        # Ms <= 1.4 robustness constraint
+        Kc = 1/K * (0.2 + 0.45* tau /L ) * PARAM_BASE
+        Ti = L * 0.4 * L + 0.8 * tau / (L + 0.1 * tau)
+        Td = 0.5*L * tau / (0.3 * L + tau)
+        Kp = Kc
+        Ki = Kc / Ti
+        Kd = Kc * Td
+        logging.info("%s: AMIGO PID values: Kp: %.3f, Ki: %.3f, Kd: %.3f", self.algo_name, Kp, Ki, Kd)
+
+        ## Feed foward controller estimate:
+        # Gff(s) =  1 + s * tau / K
+        # I use Kss as 1/K
+        # u_ff = Kss *( 1 + s*tau )* (Q-filter ) * ref
+        # Q_filter = 1 / (1+s*tau_f)
         return Kss,Ku,Tu,tau,L,omega_u
     
     def calc_final_fowdt(self):
