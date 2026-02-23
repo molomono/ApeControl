@@ -98,7 +98,6 @@ class PPControl(BaseController):
             self.set_pwm(read_time, 0.0)  # Always set hardware to off
             if self.state != "off":
                 self._transition("off", read_time)
-            #return 0.0
         else:
             # Calculate Error and Duration
             error = target_temp - temp
@@ -134,6 +133,7 @@ class PPControl(BaseController):
         # this is where the fb function should actually be called
         if self.fb_enable:
             u_fb_pid = self.fb_pwm
+            u_fb_bidirection = self.max(-self.heater_max_power, min(self.heater_max_power, self.feedback_controller.co))
         else:
             u_fb_pid = 0.0
 
@@ -157,7 +157,7 @@ class PPControl(BaseController):
         if not self.fb_enable:
             return u_ff
         else:           
-            return u_fb_pid + u_ff
+            return u_fb_bidirection + u_ff # u_fb_pid + u_ff was old implemenation
 
     def _transition(self, next_state, read_time):
         """Transition to a new state and log the change"""
