@@ -853,7 +853,7 @@ class MpcCalibrate:
             total_time += dt
             if total_time > sample_time:
                 break
-
+        logging.info("MPC-Calibrate : te %.3f, tt %.3f, samples %s "%(total_energy, total_time, samples))
         return total_energy / total_time
 
     def fastest_rate(self, samples):
