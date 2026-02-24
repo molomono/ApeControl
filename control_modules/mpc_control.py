@@ -1,6 +1,5 @@
 import logging
 import math
-from .base_controller import BaseController
 
 AMBIENT_TEMP = 25.0
 PIN_MIN_TIME = 0.100
@@ -10,17 +9,12 @@ FILAMENT_TEMP_SRC_FIXED = "fixed"
 FILAMENT_TEMP_SRC_SENSOR = "sensor"
 
 
-class ControlMPC(BaseController):
+class ControlMPC:
     def __init__(self, config, load_clean=False, register=True):
-        super().__init__(config)
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
-        heater = self.heater
-
         # The constructor may be passed either a normal klipper config
         # section object or a pre-built profile dictionary.  The latter
         # case is used by the calibration routine so that we can create a
         # new controller with the same constants as an existing one.
-        self.algo_name = "mpc"
         if isinstance(config, dict):
             # profile case
             self.profile = config
@@ -31,7 +25,10 @@ class ControlMPC(BaseController):
             # make a copy without any special knowledge of the class
             self.profile = self.get_profile()
 
-        
+        pheaters = self.printer.lookup_object('heaters')
+        heater = pheaters.lookup_heater(self.name)
+        self.heater_max_power = heater.get_max_power() * self.const_heater_power
+
         self.want_ambient_refresh = self.ambient_sensor is not None
         self.state_block_temp = (
             AMBIENT_TEMP if load_clean else self._heater_temp()
@@ -45,15 +42,12 @@ class ControlMPC(BaseController):
         self.last_time = 0.0
         self.last_temp_time = 0.0
 
-        
-
         self.printer = heater.printer
         self.toolhead = None
 
         if not register:
             return
 
-        self.heater_max_power = heater.get_max_power() * self.const_heater_power
         gcode = self.printer.lookup_object("gcode")
         gcode.register_mux_command(
             "MPC_CALIBRATE",
@@ -69,9 +63,6 @@ class ControlMPC(BaseController):
             self.cmd_MPC_SET,
             desc=self.cmd_MPC_SET_help,
         )
-
-    def handle_ready(self):
-        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
 
     cmd_MPC_SET_help = "Set MPC parameter"
 
