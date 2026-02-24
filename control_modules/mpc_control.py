@@ -134,7 +134,7 @@ class ControlMPC(BaseController):
     # Helpers
 
     def _heater_temp(self):
-        return self.heater.get_temp(self.heater.reactor.monotonic())[0]
+        return self.heater.get_temp(self.reactor.monotonic())[0]
 
     def _load_config_variables(self, config):
         self.const_block_heat_capacity = config.getfloat(
@@ -528,6 +528,7 @@ class MpcCalibrate:
     def __init__(self, printer, heater, orig_control):
         self.printer = printer
         self.heater = heater
+        self.reactor = self.printer.get_reactor()
         self.orig_control = orig_control
 
         #################### MONKEY PATCH #############################
@@ -547,6 +548,7 @@ class MpcCalibrate:
 
         # we are going to monkey patch wait_while method to the printer, this is necessary to run the calibration script.
         self.printer.wait_while = types.MethodType(wait_while, self.printer)
+        
 
     def run(self, gcmd):
         use_analytic = gcmd.get("USE_DELTA", None) is not None
@@ -742,7 +744,7 @@ class MpcCalibrate:
             self.printer.wait_while(process)
             self.heater.alter_target(0.0)
             return self.orig_control.ambient_sensor.get_temp(
-                self.heater.reactor.monotonic()
+                self.reactor.monotonic()
             )[0]
 
         gcmd.respond_info("Waiting for heater to settle at ambient temperature")
@@ -798,7 +800,7 @@ class MpcCalibrate:
         else:
             for idx in range(0, fan_breakpoints):
                 speed = idx / (fan_breakpoints - 1)
-                curtime = self.heater.reactor.monotonic()
+                curtime = self.reactor.monotonic()
                 fan.set_speed(speed)
                 gcmd.respond_info("Waiting for temperature to stabilize")
                 self.wait_stable(3)
@@ -812,7 +814,7 @@ class MpcCalibrate:
                     f"{speed * 100.0:.0f}% fan average power: {power:.2f} W"
                 )
                 fan_powers.append((speed, power))
-            curtime = self.heater.reactor.monotonic()
+            curtime = self.reactor.monotonic()
             fan.set_speed(0.0)
             power_base = fan_powers[0][1]
 
