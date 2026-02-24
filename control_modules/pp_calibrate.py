@@ -337,7 +337,11 @@ class SSAutoTune:
         self.prev_temp = 0.
         self.Kss = Kss
         self.min_duration = 10. # 10 seconds at steady state between recomputing Kss value
+        self.slope_threshold = 0.05 # if this is maintained with openloop control we know Kss is acurate at the measured temp
         self.computed_kss = []
+
+        self.hold_start_time = None
+        self.holding_pwm = False
 
     # Heater control 
     def set_pwm(self, read_time, value):
@@ -350,12 +354,23 @@ class SSAutoTune:
 
     def temperature_update(self, read_time, temp, target_temp):
         self.temp_samples.append((read_time, temp))
-        pwm = max(0.0, min(1.0, target_temp * self.Kss))
-        self.set_pwm(read_time,pwm)
-
-        if self.computed_kss[-1][0]+self.min_duration < read_time: 
-            self.Kss = self.compute_steadystate(read_time)
-            logging.info("%s: New Kss %.5f", self.algo_name, self.Kss)
+        if not self.holding_pwm:
+            # Start holding PWM
+            pwm = max(0.0, min(1.0, target_temp * self.Kss))
+            self.set_pwm(read_time, pwm)
+            self.hold_start_time = read_time
+            self.holding_pwm = True
+        else:
+            # Hold PWM for at least 10 seconds
+            if read_time - self.hold_start_time >= self.min_duration:
+                avg_temp_slope = self.get_avg_temp_slope(self.hold_start_time, read_time)
+                if abs(avg_temp_slope) > self.slope_threshold:
+                    # Recompute Kss and update PWM
+                    self.Kss = self.compute_steadystate(read_time)
+                    pwm = max(0.0, min(1.0, target_temp * self.Kss))
+                    self.set_pwm(read_time, pwm)
+                    self.hold_start_time = read_time  # Restart hold
+                # else: keep holding current PWM
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         if self.heating or len(self.peaks) < 12:
@@ -392,11 +407,10 @@ class SSAutoTune:
     def get_avg_temp_slope(self, t_start, t_end):
         # Filter temps within the time range
         temps = [temp for time, temp in self.temp_samples if t_start <= time <= t_end]
+        if len(temps) < 2:
+            return 0.0
         temp_diff = [t2 - t1 for t1, t2 in zip(temps, temps[1:])]
-        # Return average, or 0/None if no samples found to avoid DivisionByZero
-        logging.info("%s: Average Temp slope = %.3f", self.algo_name, sum(temp_diff) / len(temp_diff))
-        
-        return self.algo_name, sum(temp_diff) / len(temp_diff)
+        return sum(temp_diff) / len(temp_diff)
 
 def load_config(config):
     return PPCalibrate(config)
