@@ -542,10 +542,10 @@ class MpcCalibrate:
                 (or is interrupted, or printer shuts down)
             """
             gcode = self.lookup_object("gcode")
-            counter = gcode.get_interrupt_counter()
+            #counter = gcode.get_interrupt_counter()
             eventtime = self.reactor.monotonic()
             while condition_cb(eventtime):
-                if self.is_shutdown() or counter != gcode.get_interrupt_counter():
+                if self.is_shutdown():
                     if error_on_cancel:
                         raise logging.error("Wait_while method interrupted")
                     else:

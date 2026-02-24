@@ -42,10 +42,14 @@ class ApeControl:
                 pass
             logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", self.name, self.algo)
         except self.printer.config_error as e:
-            raise logging.error("ApeControl: %s Heater object could not be found for name %s",str(e), self.name)
-
-        
+            raise logging.error("ApeControl: %s Heater object could not be found for name %s",str(e), self.name)        
        
 
 def load_config_prefix(config):
     return ApeControl(config)
+
+
+
+## Monkey patches so far:
+# printer.wait_while() --> conditional wait statement attached to the pritner during MPC calibrate
+# printer.
