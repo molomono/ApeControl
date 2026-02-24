@@ -89,7 +89,7 @@ class PPCalibrate:
         old_control = heater.set_control(calibrate)
         logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
         try:
-            pheaters.set_temperature(heater, target, False)
+            pheaters.set_temperature(heater, target, True)
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
@@ -165,7 +165,7 @@ class ControlAutoTune:
             return True
         return False
     
-    # Analysis functions
+   
     def check_peaks(self):
         self.peaks.append((self.peak, self.peak_time))
         if self.heating:
@@ -174,7 +174,7 @@ class ControlAutoTune:
             self.peak = -9999999.
         if len(self.peaks) < 4:
             return
-
+    # Analysis functions
     def calc_fowdt(self, pos):
         temp_diff = self.peaks[pos][0] - self.peaks[pos-1][0]
         time_diff = self.peaks[pos][1] - self.peaks[pos-2][1]
