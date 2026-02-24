@@ -100,7 +100,7 @@ class PPCalibrate:
         #if calibrate.check_busy(0., 0., 0.):
         #    raise gcmd.error("%s interrupted"%(calibrate.algo_name))
         
-        self.save_results(self, cfgname, vars(calibrate.configvars))
+        self.save_results(cfgname, vars(calibrate.configvars))
         # Can make the following a function
         # Args: AutoTuneClass, heater, target
         # TODO: return dict with tuned vars and values. {'Kss': 0.001, "t_overshoot_up": ..., etc} 
