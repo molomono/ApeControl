@@ -59,6 +59,7 @@ class ControlMPC(BaseController):
         #                       desc=self.cmd_MPC_CALIBRATE_help)
 
     def post_init(self, load_clean=False, register=True):
+        self.handle_ready()
         heater = self.heater
         self.heater_max_power = heater.get_max_power() * self.const_heater_power
 
