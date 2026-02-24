@@ -29,7 +29,7 @@ class ControlMPC(BaseController):
 
         self(self.post_init(load_clean, register))
 
-    def post_init(self):
+    def post_init(self, load_clean, register):
         heater = self.heater
         self.heater_max_power = heater.get_max_power() * self.const_heater_power
 
