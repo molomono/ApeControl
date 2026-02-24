@@ -1,5 +1,6 @@
 import logging
 import math
+import types
 from .base_controller import BaseController
 
 AMBIENT_TEMP = 25.0
@@ -131,6 +132,9 @@ class ControlMPC(BaseController):
     def cmd_MPC_CALIBRATE(self, gcmd):
         cal = MpcCalibrate(self.printer, self.heater, self)
         cal.run(gcmd)
+        # Clean up the monkey patch wait_while method
+        if hasattr(self.printer, 'wait_while'):
+            delattr(self.printer, 'wait_while')
 
     # Helpers
 
@@ -548,8 +552,8 @@ class MpcCalibrate:
                         return
                 eventtime = self.reactor.pause(eventtime + interval)
 
-        # we are going to attach a wait_while method to the printer, this is necessary to run the calibration script.
-        self.printer.wait_while = wait_while
+        # we are going to monkey patch wait_while method to the printer, this is necessary to run the calibration script.
+        self.printer.wait_while = types.MethodType(wait_while, self.printer)
 
     def run(self, gcmd):
         use_analytic = gcmd.get("USE_DELTA", None) is not None
