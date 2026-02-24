@@ -30,7 +30,8 @@ class ControlMPC(BaseController):
         self.last_loss_filament = 0.0
         self.last_time = 0.0
         self.last_temp_time = 0.0
-        self.state_block_temp = AMBIENT_TEMP # default before getting updated by post_init
+        self.state_block_temp = AMBIENT_TEMP # default states before getting updated by post_init
+        self.state_sensor_temp = self.state_block_temp
 
     def post_init(self, load_clean=False, register=True):
         heater = self.heater
