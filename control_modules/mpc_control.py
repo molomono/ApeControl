@@ -3,6 +3,9 @@ import math
 import types
 from .base_controller import BaseController
 
+#TODO: fix the wait-time issue, it looks like the total time used during ie power measurement is 0 sec 
+# 
+
 AMBIENT_TEMP = 25.0
 PIN_MIN_TIME = 0.100
 
@@ -1006,3 +1009,5 @@ class TuningControl:
 
     def get_type(self):
         return "tuning"
+
+
