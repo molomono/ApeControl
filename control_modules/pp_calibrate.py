@@ -90,6 +90,8 @@ class PPCalibrate:
         logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
         try:
             pheaters.set_temperature(heater, target)
+            while not calibrate.steady_state_reached:
+                pass # Wait for calibration sequence to complete
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
@@ -382,6 +384,13 @@ class SSAutoTune:
             return True
         return False
     
+    @property
+    def steady_state_reached(self):
+        if self.holding_pwm and self.hold_start_time is not None:
+            avg_temp_slope = self.get_avg_temp_slope(self.hold_start_time, self.hold_start_time + self.min_duration)
+            return abs(avg_temp_slope) < self.slope_threshold
+        return False
+
     # Analysis
     def compute_steadystate(self, read_time):
         avg_temp = self.get_avg_temp(read_time-self.min_duration, self.min_duration)
