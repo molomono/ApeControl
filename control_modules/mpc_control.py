@@ -531,6 +531,26 @@ class MpcCalibrate:
         self.heater = heater
         self.orig_control = orig_control
 
+        def wait_while(self, condition_cb, error_on_cancel=True, interval=1.0):
+            """
+            receives a callback
+            waits until callback returns False
+                (or is interrupted, or printer shuts down)
+            """
+            gcode = self.lookup_object("gcode")
+            counter = gcode.get_interrupt_counter()
+            eventtime = self.reactor.monotonic()
+            while condition_cb(eventtime):
+                if self.is_shutdown() or counter != gcode.get_interrupt_counter():
+                    if error_on_cancel:
+                        raise logging.error("Wait_while method interrupted")
+                    else:
+                        return
+                eventtime = self.reactor.pause(eventtime + interval)
+
+        # we are going to attach a wait_while method to the printer, this is necessary to run the calibration script.
+        self.printer.wait_while = wait_while
+
     def run(self, gcmd):
         use_analytic = gcmd.get("USE_DELTA", None) is not None
         ambient_max_measure_time = gcmd.get_float(
