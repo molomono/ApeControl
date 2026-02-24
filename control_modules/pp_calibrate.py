@@ -355,22 +355,20 @@ class SSAutoTune:
     def temperature_update(self, read_time, temp, target_temp):
         self.temp_samples.append((read_time, temp))
         if not self.holding_pwm:
-            # Start holding PWM
             pwm = max(0.0, min(1.0, target_temp * self.Kss))
             self.set_pwm(read_time, pwm)
             self.hold_start_time = read_time
             self.holding_pwm = True
         else:
-            # Hold PWM for at least 10 seconds
             if read_time - self.hold_start_time >= self.min_duration:
                 avg_temp_slope = self.get_avg_temp_slope(self.hold_start_time, read_time)
                 if abs(avg_temp_slope) > self.slope_threshold:
-                    # Recompute Kss and update PWM
                     self.Kss = self.compute_steadystate(read_time)
                     pwm = max(0.0, min(1.0, target_temp * self.Kss))
                     self.set_pwm(read_time, pwm)
-                    self.hold_start_time = read_time  # Restart hold
+                    self.hold_start_time = read_time
                 # else: keep holding current PWM
+        # All logic is event-driven, no blocking or sleep
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         if self.heating or len(self.peaks) < 12:
@@ -405,12 +403,13 @@ class SSAutoTune:
         return sum(temps) / len(temps) if temps else 0.0
     
     def get_avg_temp_slope(self, t_start, t_end):
-        # Filter temps within the time range
         temps = [temp for time, temp in self.temp_samples if t_start <= time <= t_end]
         if len(temps) < 2:
             return 0.0
         temp_diff = [t2 - t1 for t1, t2 in zip(temps, temps[1:])]
-        return sum(temp_diff) / len(temp_diff)
+        avg_slope = sum(temp_diff) / len(temp_diff)
+        logging.info("%s: Average Temp slope = %.3f", self.algo_name, avg_slope)
+        return avg_slope
 
 def load_config(config):
     return PPCalibrate(config)
