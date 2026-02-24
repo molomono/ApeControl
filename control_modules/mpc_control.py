@@ -22,9 +22,8 @@ class ControlMPC(BaseController):
             self._load_config_variables(config)
             self.profile = self.get_profile()
 
-        self(self.post_init(load_clean, register))
 
-    def post_init(self, load_clean, register):
+    def post_init(self, load_clean=False, register=True):
         heater = self.heater
         self.heater_max_power = heater.get_max_power() * self.const_heater_power
 
