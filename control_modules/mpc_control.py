@@ -40,7 +40,7 @@ class ControlMPC(BaseController):
         if not register:
             return
 
-        gcode = self.gcode #self.printer.lookup_object("gcode")
+        gcode = self.printer.lookup_object("gcode")
         gcode.register_mux_command(
             "MPC_CALIBRATE",
             "HEATER",
