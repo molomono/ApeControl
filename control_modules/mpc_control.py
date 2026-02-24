@@ -11,7 +11,7 @@ FILAMENT_TEMP_SRC_SENSOR = "sensor"
 
 
 class ControlMPC(BaseController):
-    def __init__(self, config, load_clean=True, register=True):
+    def __init__(self, config, load_clean=False, register=True):
         super().__init__(config)
 
         if isinstance(config, dict):
@@ -30,6 +30,7 @@ class ControlMPC(BaseController):
         self.last_loss_filament = 0.0
         self.last_time = 0.0
         self.last_temp_time = 0.0
+        self.state_block_temp = AMBIENT_TEMP # default before getting updated by post_init
 
     def post_init(self, load_clean=False, register=True):
         heater = self.heater
