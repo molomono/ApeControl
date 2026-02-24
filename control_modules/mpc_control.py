@@ -597,6 +597,8 @@ class MpcCalibrate:
             #new_control = ControlMPC(profile, self.heater, False, False)
             ## TODO: I'm sure this can be improved upon
             new_control = ControlMPC(self.orig_control.config, False, False)
+            new_control.post_init(False, False) # Post init script Must be run after initializing ControlMPC -- dirty but it works
+
             new_control.const_block_heat_capacity = first_res["block_heat_capacity"]
             new_control.const_ambient_transfer = first_res["ambient_transfer"]
             new_control.const_sensor_responsiveness = first_res["sensor_responsiveness"]
