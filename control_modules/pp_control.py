@@ -183,7 +183,10 @@ class PPControl(BaseController):
 
     def _state_coast_up(self, error, duration, read_time):
         """Coast up state: reduce power to prevent overshoot"""
-        if duration >= self.coast_time_up:
+        # Immediate jump to regulate if temp slope is 0 or less
+        if self.prev_temp_deriv <= 0:
+            self._transition("regulate", read_time)
+        elif duration >= self.coast_time_up:
             self._transition("regulate", read_time)
         return 0.0
 
@@ -206,7 +209,10 @@ class PPControl(BaseController):
 
     def _state_coast_down(self, error, duration, read_time):
         """Coast down state: coast to prevent undershoot"""
-        if duration >= self.coast_time_down:
+        # Immediate jump to regulate if temp slope is 0 or more
+        if self.prev_temp_deriv >= 0:
+            self._transition("regulate", read_time)
+        elif duration >= self.coast_time_down:
             self._transition("regulate", read_time)
         return 1.0
     
