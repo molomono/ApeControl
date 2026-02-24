@@ -11,7 +11,7 @@ FILAMENT_TEMP_SRC_SENSOR = "sensor"
 
 
 class ControlMPC(BaseController):
-    def __init__(self, config, load_clean=False, register=True):
+    def __init__(self, config, load_clean=True, register=True):
         super().__init__(config)
 
         if isinstance(config, dict):
