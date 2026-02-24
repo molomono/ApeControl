@@ -13,6 +13,7 @@ FILAMENT_TEMP_SRC_SENSOR = "sensor"
 class ControlMPC(BaseController):
     def __init__(self, config, load_clean=False, register=True):
         super().__init__(config)
+        self.heater_name = config.get_name().split()[-1]
 
         if isinstance(config, dict):
             # profile case
@@ -36,6 +37,28 @@ class ControlMPC(BaseController):
         self.state_sensor_temp = self.state_block_temp
         self.toolhead = None # the none-check that calls this can also be used to call post_init
 
+        if not register:
+            return
+
+        gcode = self.gcode #self.printer.lookup_object("gcode")
+        gcode.register_mux_command(
+            "MPC_CALIBRATE",
+            "HEATER",
+            self.heater_name,
+            self.cmd_MPC_CALIBRATE,
+            desc=self.cmd_MPC_CALIBRATE_help,
+        )
+        gcode.register_mux_command(
+            "MPC_SET",
+            "HEATER",
+            self.heater_name,
+            self.cmd_MPC_SET,
+            desc=self.cmd_MPC_SET_help,
+        )
+        # Non mux version
+        #gcode.register_command('MPC_CALIBRATE', self.cmd_MPC_CALIBRATE, # might need to change this to a mux function later
+        #                       desc=self.cmd_MPC_CALIBRATE_help)
+
     def post_init(self, load_clean=False, register=True):
         heater = self.heater
         self.heater_max_power = heater.get_max_power() * self.const_heater_power
@@ -48,25 +71,6 @@ class ControlMPC(BaseController):
         
         #self.printer = heater.printer
         #self.toolhead = None
-
-        if not register:
-            return
-
-        gcode = self.gcode #self.printer.lookup_object("gcode")
-        gcode.register_mux_command(
-            "MPC_CALIBRATE",
-            "HEATER",
-            heater.get_name(),
-            self.cmd_MPC_CALIBRATE,
-            desc=self.cmd_MPC_CALIBRATE_help,
-        )
-        gcode.register_mux_command(
-            "MPC_SET",
-            "HEATER",
-            heater.get_name(),
-            self.cmd_MPC_SET,
-            desc=self.cmd_MPC_SET_help,
-        )
 
     cmd_MPC_SET_help = "Set MPC parameter"
 
