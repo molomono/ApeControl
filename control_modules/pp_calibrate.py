@@ -15,8 +15,17 @@ class PPCalibrate:
     def __init__(self, config):
         self.printer = config.get_printer()
         gcode = self.printer.lookup_object('gcode')
-        gcode.register_command('PP_CALIBRATE', self.cmd_PP_CALIBRATE,
-                               desc=self.cmd_PP_CALIBRATE_help)
+        #gcode.register_command('PP_CALIBRATE', self.cmd_PP_CALIBRATE,
+        #                       desc=self.cmd_PP_CALIBRATE_help)
+        self.heater_name = config.get_name().split()[-1] # (heater) name
+
+        gcode.register_mux_command(
+            "PP_CALIBRATE",
+            "HEATER",
+            self.heater_name,
+            self.cmd_PP_CALIBRATE,
+            desc=self.cmd_PP_CALIBRATE_help,
+        )
     cmd_PP_CALIBRATE_help = "Run PP calibration test"
     
     def cmd_PP_CALIBRATE(self, gcmd):
@@ -427,7 +436,7 @@ class SSAutoTune:
         logging.info("%s: Average Temp slope = %.3f", self.algo_name, avg_slope)
         return avg_slope
 
-def load_config(config):
+def load_config_prefix(config):
     return PPCalibrate(config)
 
 

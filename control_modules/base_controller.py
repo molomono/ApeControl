@@ -20,10 +20,10 @@ class BaseController(ABC):
 
     def handle_ready(self):
         self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        self.gcode = self.printer.lookup_object('gcode')
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
         self.gcode_move = self.printer.lookup_object('gcode_move')
-        self.gcode = self.printer.lookup_object('gcode')
         self.reactor = self.printer.get_reactor()
 
     @abstractmethod
