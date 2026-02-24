@@ -835,7 +835,12 @@ class MpcCalibrate:
             )
             last_time[0] = eventtime
             status = self.heater.get_status(eventtime)
-            samples.append((dt, status["control_stats"]["power"] * dt))
+            #samples.append((dt, status["control_stats"]["power"] * dt)) 
+            # This line should be handled differently, such as getting 
+            # maybe:
+            # Mainbranch klipper heater.get_status returns{'temperature': round(smoothed_temp, 2), 'target': target_temp,
+            #    'power': last_pwm_value}
+            samples.append((dt, status["power"] * dt))  # --> this is the same value in klipper as the above value was in kalico
             time[0] += dt
             return time[0] < max_time
 
