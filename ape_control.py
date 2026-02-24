@@ -11,6 +11,8 @@ class ApeControl:
         self.name = config.get_name().split()[-1] # (heater) name
         self.algo = config.get('architecture', 'pid_control')
         self.old_control = None
+        pheaters = self.printer.lookup_object('heaters')
+        heater = pheaters.lookup_heater(self.name)
 
         
         # Logic to dynamically load from the ape_modules folder
@@ -24,7 +26,7 @@ class ApeControl:
             self.new_controller = PIDControl(config)
         elif self.algo == 'mpc':
             from .control_modules.mpc_control import ControlMPC 
-            self.new_controller = ControlMPC(config)
+            self.new_controller = ControlMPC(config, heater)
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm." % self.algo)
         self.printer.register_event_handler("klippy:ready", self.exchange_controller)

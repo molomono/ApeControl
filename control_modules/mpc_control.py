@@ -10,9 +10,9 @@ FILAMENT_TEMP_SRC_FIXED = "fixed"
 FILAMENT_TEMP_SRC_SENSOR = "sensor"
 
 
-class ControlMPC(BaseController):
-    def __init__(self, config, load_clean=False, register=True):
-        super().__init__(config)
+class ControlMPC:
+    def __init__(self, config, heater, load_clean=False, register=True):
+        
         # The constructor may be passed either a normal klipper config
         # section object or a pre-built profile dictionary.  The latter
         # case is used by the calibration routine so that we can create a
@@ -28,7 +28,6 @@ class ControlMPC(BaseController):
             # make a copy without any special knowledge of the class
             self.profile = self.get_profile()
 
-        heater = self.heater # bit crazy to asign it like this, but i want to see if base_controller class solves the instatiation issue
         self.heater_max_power = heater.get_max_power() * self.const_heater_power
 
         self.want_ambient_refresh = self.ambient_sensor is not None
