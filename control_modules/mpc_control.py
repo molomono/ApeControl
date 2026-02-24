@@ -13,8 +13,9 @@ FILAMENT_TEMP_SRC_SENSOR = "sensor"
 class ControlMPC(BaseController):
     def __init__(self, config, load_clean=False, register=True):
         super().__init__(config)
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
         heater = self.heater
-        
+
         # The constructor may be passed either a normal klipper config
         # section object or a pre-built profile dictionary.  The latter
         # case is used by the calibration routine so that we can create a
