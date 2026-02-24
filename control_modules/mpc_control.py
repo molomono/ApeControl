@@ -10,7 +10,7 @@ FILAMENT_TEMP_SRC_FIXED = "fixed"
 FILAMENT_TEMP_SRC_SENSOR = "sensor"
 
 
-class ControlMPC():
+class ControlMPC(BaseController):
     def __init__(self, config, load_clean=False, register=True):
         super().__init__(config)
         # The constructor may be passed either a normal klipper config
@@ -26,10 +26,10 @@ class ControlMPC():
             # remember the loaded settings so the calibration helper can
             # make a copy without any special knowledge of the class
             self.profile = self.get_profile()
-        
 
-    def handle_ready(self):
-        super().handle_ready()
+        self(self.post_init(load_clean, register))
+
+    def post_init(self):
         heater = self.heater
         self.heater_max_power = heater.get_max_power() * self.const_heater_power
 
