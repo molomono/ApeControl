@@ -21,6 +21,7 @@ class ControlMPC(BaseController):
         else: # make compatible with mainline klipper (passing config not profile)
             self._load_config_variables(config)
             self.profile = self.get_profile()
+            logging.info("ApeControl: MPC profile/configvars %s", self.profile)
 
 
     def post_init(self, load_clean=False, register=True):
