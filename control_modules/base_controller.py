@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 class BaseController(ABC):
     def __init__(self, config):
+        self.config = config
         self.printer = config.get_printer()
         self.heater_name = config.get_name().split()[-1]
         self.target_temp = None

@@ -14,16 +14,10 @@ FILAMENT_TEMP_SRC_SENSOR = "sensor"
 class ControlMPC(BaseController):
     def __init__(self, config, load_clean=False, register=True):
         super().__init__(config)
-        self.heater_name = config.get_name().split()[-1]
-
-        if isinstance(config, dict):
-            # profile case
-            self.profile = config
-            self._load_profile()
-        else: # make compatible with mainline klipper (passing config not profile)
-            self._load_config_variables(config)
-            self.profile = self.get_profile()
-            logging.info("ApeControl: MPC profile/configvars %s", self.profile)
+        
+        self._load_config_variables(config)
+        self.profile = self.get_profile()
+        logging.info("ApeControl: MPC profile/configvars %s", self.profile)
 
         self.state_ambient_temp = AMBIENT_TEMP
 
@@ -40,7 +34,8 @@ class ControlMPC(BaseController):
 
         if not register:
             return
-
+        
+        self.heater_name = config.get_name().split()[-1]
         gcode = self.printer.lookup_object("gcode")
         gcode.register_mux_command(
             "MPC_CALIBRATE",
@@ -535,6 +530,7 @@ class MpcCalibrate:
         self.heater = heater
         self.orig_control = orig_control
 
+        #################### MONKEY PATCH #############################
         def wait_while(self, condition_cb, error_on_cancel=True, interval=1.0):
             """
             receives a callback
@@ -593,7 +589,10 @@ class MpcCalibrate:
                 "sensor_responsiveness",
             ]:
                 profile[key] = first_res[key]
-            new_control = ControlMPC(profile, self.heater, False, False)
+
+            #new_control = ControlMPC(profile, self.heater, False, False)
+            new_control = ControlMPC(old_control.config, False, False)
+            
             new_control.state_block_temp = first_res["post_block_temp"]
             new_control.state_sensor_temp = first_res["post_sensor_temp"]
             new_control.state_ambient_temp = ambient_temp
