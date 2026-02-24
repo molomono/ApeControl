@@ -542,10 +542,7 @@ class MpcCalibrate:
             eventtime = self.reactor.monotonic()
             while condition_cb(eventtime):
                 if self.is_shutdown():
-                    if error_on_cancel:
-                        raise logging.error("Wait_while method interrupted")
-                    else:
-                        return
+                    return
                 eventtime = self.reactor.pause(eventtime + interval)
 
         # we are going to monkey patch wait_while method to the printer, this is necessary to run the calibration script.
@@ -582,17 +579,23 @@ class MpcCalibrate:
             )
             logging.info("First pass: %s", first_res)
 
-            profile = dict(self.orig_control.profile)
-            for key in [
-                "block_heat_capacity",
-                "ambient_transfer",
-                "sensor_responsiveness",
-            ]:
-                profile[key] = first_res[key]
+
+            ## This is kind of clean though, smart way of updating variables without requiring config io
+            #profile = dict(self.orig_control.profile)
+            #for key in [
+            #    "block_heat_capacity",
+            #    "ambient_transfer",
+            #    "sensor_responsiveness",
+            #]:
+            #    profile[key] = first_res[key]
 
             #new_control = ControlMPC(profile, self.heater, False, False)
-            new_control = ControlMPC(old_control.config, False, False)
-            
+            ## TODO: I'm sure this can be improved upon
+            new_control = ControlMPC(self.orig_control.config, False, False)
+            new_control.const_block_heat_capacity = first_res["block_heat_capacity"]
+            new_control.const_ambient_transfer = first_res["ambient_transfer"]
+            new_control.const_sensor_responsiveness = first_res["sensor_responsiveness"]
+
             new_control.state_block_temp = first_res["post_block_temp"]
             new_control.state_sensor_temp = first_res["post_sensor_temp"]
             new_control.state_ambient_temp = ambient_temp
