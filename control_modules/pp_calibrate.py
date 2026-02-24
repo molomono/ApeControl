@@ -83,7 +83,23 @@ class PPCalibrate:
         configfile.set(cfgname, 'pid_ki', "%.3f" % (pid_ki,) )
         configfile.set(cfgname, 'pid_kd', "%.3f" % (pid_kd,) )
 
-
+        ######## SteadyState Calibration sequence
+        #self.run_autotune(calibrate,configvars=None)
+        calibrate = SSAutoTune(heater, target, Kss)
+        old_control = heater.set_control(calibrate)
+        logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
+        try:
+            pheaters.set_temperature(heater, target, False)
+        except self.printer.command_error as e:
+            heater.set_control(old_control)
+            raise
+        heater.set_control(old_control) # Restore actual controller after calibration test
+        logging.info("ApeControl: Heater object '%s' controller has been restored to %s", heater_name, old_control.algo_name)
+        #if write_file:
+        #    calibrate.write_file('/tmp/heattest.txt')
+        #if calibrate.check_busy(0., 0., 0.):
+        #    raise gcmd.error("%s interrupted"%(calibrate.algo_name))
+        
         # Can make the following a function
         # Args: AutoTuneClass, heater, target
         # TODO: return dict with tuned vars and values. {'Kss': 0.001, "t_overshoot_up": ..., etc} 
@@ -111,6 +127,7 @@ class ControlAutoTune:
         self.last_pwm = 0.
         self.pwm_samples = []
         self.temp_samples = []
+
     # Heater control 
     def set_pwm(self, read_time, value):
         if value != self.last_pwm:
@@ -118,6 +135,7 @@ class ControlAutoTune:
                 (read_time + self.heater.get_pwm_delay(), value))
             self.last_pwm = value
         self.heater.set_pwm(read_time, value)
+
     def temperature_update(self, read_time, temp, target_temp):
         self.temp_samples.append((read_time, temp))
         # Check if the temperature has crossed the target and
@@ -299,8 +317,9 @@ class ControlAutoTune:
 
 
 class SSAutoTune:
-    def __init__(self, heater, target):
+    def __init__(self, heater, target, Kss):
         self.algo_name = "PP-SS-AutoTune"
+        self.configvars = SimpleNamespace()
         self.heater = heater
         self.target = target # used for Kss computation later
         self.heater_max_power = heater.get_max_power()
@@ -315,38 +334,28 @@ class SSAutoTune:
         self.last_pwm = 0.
         self.pwm_samples = []
         self.temp_samples = []
+        self.prev_temp = 0.
+        self.Kss = Kss
+        self.min_duration = 10. # 10 seconds at steady state between recomputing Kss value
+        self.computed_kss = []
+
     # Heater control 
     def set_pwm(self, read_time, value):
-        if value != self.last_pwm:
+        if value != self.last_pwm: # save each time the pwm is changed
             self.pwm_samples.append(
                 (read_time + self.heater.get_pwm_delay(), value))
             self.last_pwm = value
+            self.computed_kss.append((read_time + self.heater.get_pwm_delay(), self.Kss))
         self.heater.set_pwm(read_time, value)
+
     def temperature_update(self, read_time, temp, target_temp):
         self.temp_samples.append((read_time, temp))
-        # Check if the temperature has crossed the target and
-        # enable/disable the heater if so.
-        if self.heating and temp >= target_temp:
-            self.heating = False
-            self.check_peaks()
-            self.heater.alter_target(self.calibrate_temp - TUNE_PID_DELTA)
-        elif not self.heating and temp <= target_temp:
-            self.heating = True
-            self.check_peaks()
-            self.heater.alter_target(self.calibrate_temp)
-        # Check if this temperature is a peak and record it if so
-        if self.heating:
-            self.set_pwm(read_time, self.heater_max_power)
-            if temp < self.peak:
-                self.peak = temp
-                self.peak_time = read_time
-        else:
-            self.set_pwm(read_time, 0.)
-            if temp > self.peak:
-                self.peak = temp
-                self.peak_time = read_time
+        pwm = max(0.0, min(1.0, target_temp * self.Kss))
+        self.set_pwm(read_time,pwm)
 
-        self.compute_steadystate()
+        if self.computed_kss[-1][0]+self.min_duration < read_time: 
+            self.Kss = self.compute_steadystate(read_time)
+            logging.info("%s: New Kss %.5f", self.algo_name, self.Kss)
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         if self.heating or len(self.peaks) < 12:
@@ -354,8 +363,13 @@ class SSAutoTune:
         return False
     
     # Analysis
-    def compute_steadystate(self):
-        pass# for now   
+    def compute_steadystate(self, read_time):
+        avg_temp = self.get_avg_temp(read_time-self.min_duration, self.min_duration)
+        avg_temp_slope = self.get_avg_temp_slope(read_time-self.min_duration, self.min_duration)
+        Kss_calibrated = self.last_pwm/avg_temp
+        self.computed_kss.append((read_time, Kss_calibrated))
+        return Kss_calibrated   
+
 
     
     # Offline analysis helper
@@ -374,13 +388,22 @@ class SSAutoTune:
         logging.info("%s: Average Temp = %.3f", self.algo_name, sum(temps) / len(temps))
         
         return sum(temps) / len(temps) if temps else 0.0
+    
+    def get_avg_temp_slope(self, t_start, t_end):
+        # Filter temps within the time range
+        temps = [temp for time, temp in self.temp_samples if t_start <= time <= t_end]
+        temp_diff = [t2 - t1 for t1, t2 in zip(temps, temps[1:])]
+        # Return average, or 0/None if no samples found to avoid DivisionByZero
+        logging.info("%s: Average Temp slope = %.3f", self.algo_name, sum(temp_diff) / len(temp_diff))
+        
+        return self.algo_name, sum(temp_diff) / len(temp_diff)
 
 def load_config(config):
     return PPCalibrate(config)
 
 
 # TODO: Modify calculations to use ambient temperature --> more important for heated enclosures though
-# TODO: use self.temp_samples average temp between first high peak and last peak times to copute K_ss estimate
+# TODO: DONE, use self.temp_samples average temp between first high peak and last peak times to copute K_ss estimate
 # TODO: Add a steady-state calibration test which holds target temp with ss sensitivity value
 # -- K_ss should be computed from the average duty cycle and average temperature during htis period
 # TODO: K_ss should hold temp within a given Temp_delta, come to a rest and then turn on the part fan
