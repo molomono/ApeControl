@@ -30,8 +30,11 @@ class ControlMPC(BaseController):
         self.last_loss_filament = 0.0
         self.last_time = 0.0
         self.last_temp_time = 0.0
+
+        
         self.state_block_temp = AMBIENT_TEMP # default states before getting updated by post_init
         self.state_sensor_temp = self.state_block_temp
+        self.toolhead = None # the none-check that calls this can also be used to call post_init
 
     def post_init(self, load_clean=False, register=True):
         heater = self.heater
@@ -44,7 +47,7 @@ class ControlMPC(BaseController):
         self.state_sensor_temp = self.state_block_temp
         
         #self.printer = heater.printer
-        self.toolhead = None
+        #self.toolhead = None
 
         if not register:
             return
