@@ -84,25 +84,24 @@ class PPCalibrate:
         configfile.set(cfgname, 'pid_kd', "%.3f" % (pid_kd,) )
 
         ######## SteadyState Calibration sequence
+        ### WIP ....
         #self.run_autotune(calibrate,configvars=None)
-        calibrate = SSAutoTune(heater, target, Kss)
-        old_control = heater.set_control(calibrate)
-        logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
-        try:
-            pheaters.set_temperature(heater, target)
-            while not calibrate.steady_state_reached:
-                pass # Wait for calibration sequence to complete
-        except self.printer.command_error as e:
-            heater.set_control(old_control)
-            raise
-        heater.set_control(old_control) # Restore actual controller after calibration test
-        logging.info("ApeControl: Heater object '%s' controller has been restored to %s", heater_name, old_control.algo_name)
+        #calibrate = SSAutoTune(heater, target, Kss)
+        #old_control = heater.set_control(calibrate)
+        #logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
+        #try:
+        #    pheaters.set_temperature(heater, target)
+        #except self.printer.command_error as e:
+        #    heater.set_control(old_control)
+        #    raise
+        #heater.set_control(old_control) # Restore actual controller after calibration test
+        #logging.info("ApeControl: Heater object '%s' controller has been restored to %s", heater_name, old_control.algo_name)
         #if write_file:
         #    calibrate.write_file('/tmp/heattest.txt')
         #if calibrate.check_busy(0., 0., 0.):
         #    raise gcmd.error("%s interrupted"%(calibrate.algo_name))
         
-        self.save_results(cfgname, vars(calibrate.configvars))
+        #self.save_results(cfgname, vars(calibrate.configvars))
         # Can make the following a function
         # Args: AutoTuneClass, heater, target
         # TODO: return dict with tuned vars and values. {'Kss': 0.001, "t_overshoot_up": ..., etc} 
@@ -111,6 +110,7 @@ class PPCalibrate:
 
     def save_results(self, cfgname, tuned_var_dict):
         # Automatically save all variables in passed dictionary
+        logging.info("ApeControl: Saving vars to %s, Vars: %s" %(cfgname, tuned_var_dict))
         configfile = self.printer.lookup_object('configfile')
         for key, value in tuned_var_dict.items():
             configfile.set(cfgname, key, "%.5f" % (value,) )
