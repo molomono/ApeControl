@@ -6,7 +6,7 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import math, logging
 import logging
-
+from types import SimpleNamespace
 
 PARAM_BASE = 255.
 TEMP_AMBIENT = 20.
@@ -34,6 +34,7 @@ class PPCalibrate:
         self.printer.lookup_object('toolhead').get_last_move_time()
 
         # Create a new instance of the AutoTune class.
+        
         calibrate = ControlAutoTune(heater, target)
         old_control = heater.set_control(calibrate)
         logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
@@ -56,6 +57,9 @@ class PPCalibrate:
         autotune_report = "%s: Kss=%.6f,Ku=%.3f,Tu=%.3f,omega_u=%.3f,tau=%.3f,L=%.3f" % (calibrate.algo_name, Kss,Ku,Tu,omega_u,tau,L)
         logging.info(autotune_report)
         
+        ######## Test for passing config variables as a dict, --> To implement DRY of configfile update/saving function
+        logging.info("%s: ConfigVarsDict = %s", calibrate.algo_name, vars(calibrate.configvars))
+
         autotune_report_pid = "%s: AMIGO-PID values Kp=%.3f, Ki=%.3f, Kd=%.3f" % (calibrate.algo_name, pid_kp, pid_ki, pid_kd)
         logging.info(autotune_report_pid)
         gcmd.respond_info(
@@ -64,7 +68,7 @@ class PPCalibrate:
             "with these parameters and restart the printer.")
         
         # Store results for SAVE_CONFIG
-        cfgname = "ape_control "+heater.get_name() # [ape_control heater_name]
+        cfgname = "ape_control " + heater.get_name() # [ape_control heater_name]
         configfile = self.printer.lookup_object('configfile')
         configfile.set(cfgname, 'control', 'pp_control')
         configfile.set(cfgname, 'K_ss', "%.6f" % (Kss,))
@@ -73,13 +77,18 @@ class PPCalibrate:
         configfile.set(cfgname, 't_overshoot_down', "%.3f" % (t_overshoot_down,))
         configfile.set(cfgname, 'coast_time_down', "%.3f" % (coast_time_down  - L/3,))
         configfile.set(cfgname, 'min_duration', "%.3f" % (L,) )
+        
         configfile.set(cfgname, 'fb_enable', "True")
         configfile.set(cfgname, 'pid_kp', "%.3f" % (pid_kp,) )
         configfile.set(cfgname, 'pid_ki', "%.3f" % (pid_ki,) )
         configfile.set(cfgname, 'pid_kd', "%.3f" % (pid_kd,) )
- 
-        
-        
+
+
+        # Can make the following a function
+        # Args: AutoTuneClass, heater, target
+        # TODO: return dict with tuned vars and values. {'Kss': 0.001, "t_overshoot_up": ..., etc} 
+        # Add self.store_results(cfgname, tuned_var_dict)
+        # load configfile and save dict contents.
 
 
 TUNE_PID_DELTA = 5.0
@@ -87,6 +96,7 @@ TUNE_PID_DELTA = 5.0
 class ControlAutoTune:
     def __init__(self, heater, target):
         self.algo_name = "PP-AutoTune"
+        self.configvars = SimpleNamespace()
         self.heater = heater
         self.target = target # used for Kss computation later
         self.heater_max_power = heater.get_max_power()
@@ -132,17 +142,12 @@ class ControlAutoTune:
                 self.peak = temp
                 self.peak_time = read_time
 
-        self.compute_steadystate()
-
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         if self.heating or len(self.peaks) < 12:
             return True
         return False
     
-    # Analysis
-    def compute_steadystate(self):
-        pass# for now
-    
+    # Analysis functions
     def check_peaks(self):
         self.peaks.append((self.peak, self.peak_time))
         if self.heating:
@@ -252,13 +257,105 @@ class ControlAutoTune:
         # I use Kss as 1/K
         # u_ff = Kss *( 1 + s*tau )* (Q-filter ) * ref
         # Q_filter = 1 / (1+s*tau_f)
+        self.configvars.Kss = Kss
+        self.configvars.Ku = Ku
+        self.configvars.Tu = Tu
+        self.configvars.tau = tau
+        self.configvars.L = L
+        self.configvars.omega_u = omega_u
+        self.configvars.t_overshoot_up = t_overshoot_up
+        self.configvars.t_overshoot_down = t_overshoot_down
+        self.configvars.coast_time_up = coast_time_up
+        self.configvars.coast_time_down = coast_time_down
+        self.configvars.Kp = Kp
+        self.configvars.Ki = Ki
+        self.configvars.Kd = Kd
         return Kss,Ku,Tu,tau,L,omega_u, t_overshoot_up, t_overshoot_down, coast_time_up, coast_time_down, Kp, Ki, Kd
-    
+
+
     def calc_final_fowdt(self):
         cycle_times = [(self.peaks[pos][1] - self.peaks[pos-2][1], pos)
                        for pos in range(4, len(self.peaks))]
         midpoint_pos = sorted(cycle_times)[len(cycle_times)//2][1]
         return self.calc_fowdt(midpoint_pos)
+
+    
+    # Utility Functions
+    def write_file(self, filename):
+        pwm = ["pwm: %.3f %.3f" % (time, value)
+               for time, value in self.pwm_samples]
+        out = ["%.3f %.3f" % (time, temp) for time, temp in self.temp_samples]
+        f = open(filename, "w")
+        f.write('\n'.join(pwm + out))
+        f.close()
+
+    def get_avg_temp(self, t_start, t_end):
+        # Filter temps within the time range
+        temps = [temp for time, temp in self.temp_samples if t_start <= time <= t_end]
+        # Return average, or 0/None if no samples found to avoid DivisionByZero
+        logging.info("%s: Average Temp = %.3f", self.algo_name, sum(temps) / len(temps))
+        
+        return sum(temps) / len(temps) if temps else 0.0
+
+
+class SSAutoTune:
+    def __init__(self, heater, target):
+        self.algo_name = "PP-SS-AutoTune"
+        self.heater = heater
+        self.target = target # used for Kss computation later
+        self.heater_max_power = heater.get_max_power()
+        self.calibrate_temp = target
+        # Heating control
+        self.heating = False
+        self.peak = 0.
+        self.peak_time = 0.
+        # Peak recording
+        self.peaks = [] # (temp, time)
+        # Sample recording
+        self.last_pwm = 0.
+        self.pwm_samples = []
+        self.temp_samples = []
+    # Heater control 
+    def set_pwm(self, read_time, value):
+        if value != self.last_pwm:
+            self.pwm_samples.append(
+                (read_time + self.heater.get_pwm_delay(), value))
+            self.last_pwm = value
+        self.heater.set_pwm(read_time, value)
+    def temperature_update(self, read_time, temp, target_temp):
+        self.temp_samples.append((read_time, temp))
+        # Check if the temperature has crossed the target and
+        # enable/disable the heater if so.
+        if self.heating and temp >= target_temp:
+            self.heating = False
+            self.check_peaks()
+            self.heater.alter_target(self.calibrate_temp - TUNE_PID_DELTA)
+        elif not self.heating and temp <= target_temp:
+            self.heating = True
+            self.check_peaks()
+            self.heater.alter_target(self.calibrate_temp)
+        # Check if this temperature is a peak and record it if so
+        if self.heating:
+            self.set_pwm(read_time, self.heater_max_power)
+            if temp < self.peak:
+                self.peak = temp
+                self.peak_time = read_time
+        else:
+            self.set_pwm(read_time, 0.)
+            if temp > self.peak:
+                self.peak = temp
+                self.peak_time = read_time
+
+        self.compute_steadystate()
+
+    def check_busy(self, eventtime, smoothed_temp, target_temp):
+        if self.heating or len(self.peaks) < 12:
+            return True
+        return False
+    
+    # Analysis
+    def compute_steadystate(self):
+        pass# for now   
 
     
     # Offline analysis helper
