@@ -22,9 +22,9 @@ class ApeControl:
         elif self.algo == 'pid_control':
             from .control_modules.pid_control import PIDControl 
             self.new_controller = PIDControl(config)
-            
-        elif self.algo == 'mpc-example':
-            pass # example line for adding addtional control modules
+        elif self.algo == 'mpc':
+            from .control_modules.mpc_control import ControlMPC 
+            self.new_controller = ControlMPC(config)
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm." % self.algo)
         self.printer.register_event_handler("klippy:ready", self.exchange_controller)
