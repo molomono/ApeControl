@@ -23,6 +23,13 @@ class ControlMPC(BaseController):
             self.profile = self.get_profile()
             logging.info("ApeControl: MPC profile/configvars %s", self.profile)
 
+        self.state_ambient_temp = AMBIENT_TEMP
+
+        self.last_power = 0.0
+        self.last_loss_ambient = 0.0
+        self.last_loss_filament = 0.0
+        self.last_time = 0.0
+        self.last_temp_time = 0.0
 
     def post_init(self, load_clean=False, register=True):
         heater = self.heater
@@ -33,15 +40,8 @@ class ControlMPC(BaseController):
             AMBIENT_TEMP if load_clean else self._heater_temp()
         )
         self.state_sensor_temp = self.state_block_temp
-        self.state_ambient_temp = AMBIENT_TEMP
-
-        self.last_power = 0.0
-        self.last_loss_ambient = 0.0
-        self.last_loss_filament = 0.0
-        self.last_time = 0.0
-        self.last_temp_time = 0.0
-
-        self.printer = heater.printer
+        
+        #self.printer = heater.printer
         self.toolhead = None
 
         if not register:
