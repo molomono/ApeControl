@@ -117,6 +117,9 @@ class PPControl(BaseController):
             # Set PWM output (assumes heater object is accessible via self.printer)
             self.set_pwm(read_time, bounded_co)
 
+            # Update previous temperature/time for next derivative calculation
+            self.prev_temp = temp
+            self.prev_temp_time = read_time
             self.prev_temp_deriv = temp_deriv
         
     
