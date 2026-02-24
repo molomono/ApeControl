@@ -19,6 +19,7 @@ class BaseController(ABC):
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
     def handle_ready(self):
+        logging.info("Klipper:ready handle in base_controller")
         self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')

@@ -13,18 +13,13 @@ FILAMENT_TEMP_SRC_SENSOR = "sensor"
 class ControlMPC(BaseController):
     def __init__(self, config, load_clean=False, register=True):
         super().__init__(config)
-        # The constructor may be passed either a normal klipper config
-        # section object or a pre-built profile dictionary.  The latter
-        # case is used by the calibration routine so that we can create a
-        # new controller with the same constants as an existing one.
+
         if isinstance(config, dict):
             # profile case
             self.profile = config
             self._load_profile()
         else: # make compatible with mainline klipper (passing config not profile)
             self._load_config_variables(config)
-            # remember the loaded settings so the calibration helper can
-            # make a copy without any special knowledge of the class
             self.profile = self.get_profile()
 
         self(self.post_init(load_clean, register))
