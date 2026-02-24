@@ -13,7 +13,7 @@ class BaseController(ABC):
         self.heater_name = config.get_name().split()[-1]
         self.target_temp = None
         # Relevant objects
-        self.heater = None
+        # self.heater = None
         # Universal config parameters
         self.heater_max_power = config.getfloat('max_power', 1.0)
         
