@@ -89,7 +89,7 @@ class PPCalibrate:
         old_control = heater.set_control(calibrate)
         logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", heater_name, calibrate.algo_name)
         try:
-            pheaters.set_temperature(heater, target, True)
+            pheaters.set_temperature(heater, target)
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
@@ -100,12 +100,19 @@ class PPCalibrate:
         #if calibrate.check_busy(0., 0., 0.):
         #    raise gcmd.error("%s interrupted"%(calibrate.algo_name))
         
+        self.save_results(self, cfgname, vars(calibrate.configvars))
         # Can make the following a function
         # Args: AutoTuneClass, heater, target
         # TODO: return dict with tuned vars and values. {'Kss': 0.001, "t_overshoot_up": ..., etc} 
         # Add self.store_results(cfgname, tuned_var_dict)
         # load configfile and save dict contents.
 
+    def save_results(self, cfgname, tuned_var_dict):
+        # Automatically save all variables in passed dictionary
+        configfile = self.printer.lookup_object('configfile')
+        for key, value in tuned_var_dict.items():
+            configfile.set(cfgname, key, "%.5f" % (value,) )
+        
 
 TUNE_PID_DELTA = 5.0
 
