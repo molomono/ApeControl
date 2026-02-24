@@ -14,11 +14,19 @@ TEMP_AMBIENT = 20.
 class PPCalibrate:
     def __init__(self, config):
         self.printer = config.get_printer()
-        gcode = self.printer.lookup_object('gcode')
-        gcode.register_command('PP_CALIBRATE', self.cmd_PP_CALIBRATE, # might need to change this to a mux function later
-                               desc=self.cmd_PP_CALIBRATE_help)
         self.heater_name = config.get_name().split()[-1] # (heater) name
-
+        #gcode = self.printer.lookup_object('gcode')
+        #gcode.register_command('PP_CALIBRATE', self.cmd_PP_CALIBRATE, # might need to change this to a mux function later
+        #                       desc=self.cmd_PP_CALIBRATE_help)
+        gcode = self.printer.lookup_object("gcode")
+        gcode.register_mux_command(
+            "PP_CALIBRATE",
+            "HEATER",
+            self.heater_name,
+            self.cmd_PP_CALIBRATE,
+            desc=self.cmd_PP_CALIBRATE_help,
+        )
+        
         
     cmd_PP_CALIBRATE_help = "Run PP calibration test"
     
