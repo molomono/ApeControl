@@ -752,7 +752,7 @@ class MpcCalibrate:
             )[0]
 
         gcmd.respond_info("Waiting for heater to settle at ambient temperature")
-        ambient_temp = self.wait_settle(0.1) # ambient_temp = self.wait_settle(0.01)
+        ambient_temp = self.wait_settle(0.01)
         self.heater.alter_target(0.0)
         return ambient_temp
 
