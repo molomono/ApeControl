@@ -9,7 +9,7 @@ class ApeControl:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.name = config.get_name().split()[-1] # (heater) name
-        self.algo = config.get('architecture', 'pid_control')
+        self.algo = config.get('control', 'pid_control')
         self.old_control = None
 
         

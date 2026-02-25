@@ -3,8 +3,8 @@ import math
 import types
 from .base_controller import BaseController
 
-#TODO: fix the wait-time issue, it looks like the total time used during ie power measurement is 0 sec 
-# 
+#TODO: The measure power works, but i'm getting it in % of max power. so we must multiply it by self.heater_max_power
+
 
 AMBIENT_TEMP = 25.0
 PIN_MIN_TIME = 0.100
@@ -639,7 +639,7 @@ class MpcCalibrate:
                 [f"{p:.6g}" for p in second_res["fan_ambient_transfer"]]
             )
 
-            cfgname = self.heater.get_name()
+            cfgname = "ape_control " + self.heater.get_name()
             gcmd.respond_info(
                 f"Finished MPC calibration of heater '{cfgname}'\n"
                 "Measured:\n "
@@ -650,6 +650,7 @@ class MpcCalibrate:
             )
 
             configfile = self.heater.printer.lookup_object("configfile")
+            #configfile.set(cfgname, "control", "mpc")
             configfile.set(cfgname, "control", "mpc")
             configfile.set(
                 cfgname, "block_heat_capacity", f"{block_heat_capacity:#.6g}"
@@ -859,7 +860,7 @@ class MpcCalibrate:
             total_time += dt
             if total_time > sample_time:
                 break
-        logging.info("MPC-Calibrate : te %.3f, tt %.3f, samples %s "%(total_energy, total_time, samples))
+        #logging.info("MPC-Calibrate : te %.3f, tt %.3f, samples %s "%(total_energy, total_time, samples))
         return total_energy / total_time
 
     def fastest_rate(self, samples):
