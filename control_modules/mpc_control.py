@@ -60,8 +60,7 @@ class ControlMPC(BaseController):
 
     def post_init(self, load_clean=False, register=True):
         self.handle_ready()
-        heater = self.heater
-        self.heater_max_power = heater.get_max_power() * self.const_heater_power
+        self.heater_max_power = self.heater.get_max_power() * self.const_heater_power
 
         self.want_ambient_refresh = self.ambient_sensor is not None
         self.state_block_temp = (
@@ -69,8 +68,6 @@ class ControlMPC(BaseController):
         )
         self.state_sensor_temp = self.state_block_temp
         
-        #self.printer = heater.printer
-        #self.toolhead = None
 
     cmd_MPC_SET_help = "Set MPC parameter"
 
@@ -797,11 +794,11 @@ class MpcCalibrate:
         self.wait_stable(5)
 
         fan = self.orig_control.cooling_fan
-
+        
         fan_powers = []
         if fan is None:
             power_base = self.measure_power(
-                ambient_max_measure_time, ambient_measure_sample_time
+                ambient_max_measure_time, ambient_measure_sample_time, self.orig_control.heater_max_power
             )
             gcmd.respond_info(f"Average stable power: {power_base} W")
         else:
@@ -815,7 +812,7 @@ class MpcCalibrate:
                     f"Temperature stable, measuring power usage with {speed * 100.0:.0f}% fan speed"
                 )
                 power = self.measure_power(
-                    ambient_max_measure_time, ambient_measure_sample_time
+                    ambient_max_measure_time, ambient_measure_sample_time, self.orig_control.heater_max_power
                 )
                 gcmd.respond_info(
                     f"{speed * 100.0:.0f}% fan average power: {power:.2f} W"
@@ -831,7 +828,7 @@ class MpcCalibrate:
             "fan_powers": fan_powers,
         }
 
-    def measure_power(self, max_time, sample_time):
+    def measure_power(self, max_time, sample_time, max_heater_power):
         samples = []
         time = [0]
         last_time = [None]
@@ -846,8 +843,8 @@ class MpcCalibrate:
             # This line should be handled differently, such as getting 
             # maybe:
             # Mainbranch klipper heater.get_status returns{'temperature': round(smoothed_temp, 2), 'target': target_temp,
-            #    'power': last_pwm_value}
-            samples.append((dt, status["power"] * dt))  # --> this is the same value in klipper as the above value was in kalico
+            #    'power': last_pwm_value} -- Big difference being this klipper "power" is in pwm ratio, kalico is in watts
+            samples.append((dt, max_heater_power*status["power"] * dt))  # --> this is the same value in klipper as the above value was in kalico
             time[0] += dt
             return time[0] < max_time
 
