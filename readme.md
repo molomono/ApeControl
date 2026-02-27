@@ -38,7 +38,7 @@ chmod +x install.sh && ./install.sh
 Configuration
 --- 
 To enable ApeControl, define the module in your printer.cfg. You can specify the architecture and provide the necessary parameters for that specific module. 
-```toml
+```
 [ape_control extruder]  # ape_control loads the dynamic loader, 'extruder' passes the name of the heater object. 'heater_bed' is another classic name.
 
 architecture: pp_control# Selects control_modules/pp_control.py
@@ -49,7 +49,7 @@ k_ss: 0.0012            # Steady-state gain (PWM % per degree K)
 k_fan: 0.10             # PWM % additional power draw when fan is max speed.
 ```
 Some modules may have calibration scripts. To tune your controller run the appropriate calibration script. For this example run:
-```toml
+```
 PP_CALIBRATE HEATER=extruder Target=200
 CONFIG_SAVE # to save the calibrated parameters
 ```
