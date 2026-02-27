@@ -260,18 +260,19 @@ class ControlAutoTune:
         L = (math.pi - math.atan(omega_u*tau)) / omega_u # Dead time
 
         ################# Leaving this here for later PID tuning #####################
+        # Classic Ziegler-Nichols PID estimates
         #Ti = 0.5 * Tu
         #Td = 0.125 * Tu
         #Kp = 0.6 * Ku * PARAM_BASE
         #Ki = Kp / Ti
         #Kd = Kp * Td
         
-        ## Classic Ziegler-Nichols Table
-        #Controller,Kc​ (Kp​),   Ti​,        Td​,         Ki​ (Kc​/Ti​),  Kd​ (Kc​⋅Td​)
-        #P          0.5 Ku​,    inf,       0,          0,           0
-        #PI         0.45 Ku​,   0.83 Tu​,   0,          0.54 Ku​/Tu​,  0
-        #PID        0.6 Ku​,    0.5 Tu​,    0.125 Tu​,   1.2 Ku​/Tu​,   0.075Ku​⋅Tu​
-        #
+        ## Classic Ziegler-Nichols Table -- Aggressive Control estimate -- Good for regulation
+        #Controller,Kc (Kp),   Ti,        Td,         Ki (Kc/Ti),  Kd (Kc⋅Td)
+        #P          0.5 Ku,    inf,       0,          0,           0
+        #PI         0.45 Ku,   0.83 Tu,   0,          0.54 Ku/Tu,  0
+        #PID        0.6 Ku,    0.5 Tu,    0.125 Tu,   1.2 Ku/Tu,   0.075Ku⋅Tu
+
         ## Tyreus-Luyben Values -- More conservative than Ziegler-Nichols
         Kp =  0.31*Ku * PARAM_BASE
         Ti =  2.2 *Tu
@@ -280,7 +281,7 @@ class ControlAutoTune:
         Kd = Kp * Td
         logging.info("%s: PID Tyreus-Luyben values: Kp: %.3f, Ki: %.3f, Kd: %.3f", self.algo_name, Kp, Ki, Kd)
         
-        ## AMIGO method FF+PID Tuning vars:
+        ## AMIGO method FF+PID Tuning vars: -- Similar to Tyreus-Luyben with higher Td
         # Ms <= 1.4 robustness constraint
         Kc = 1/K * (0.2 + 0.45* tau /L ) * PARAM_BASE
         Ti = L * 0.4 * L + 0.8 * tau / (L + 0.1 * tau)
@@ -290,7 +291,7 @@ class ControlAutoTune:
         Kd = Kc * Td
         logging.info("%s: AMIGO PID values: Kp: %.3f, Ki: %.3f, Kd: %.3f", self.algo_name, Kp, Ki, Kd)
 
-        ## Feed foward controller estimate:
+        ## TODO: Feed foward controller estimate, based on FOWDT:
         # Gff(s) =  1 + s * tau / K
         # I use Kss as 1/K
         # u_ff = Kss *( 1 + s*tau )* (Q-filter ) * ref
