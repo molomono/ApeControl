@@ -39,7 +39,8 @@ Configuration
 --- 
 To enable ApeControl, define the module in your printer.cfg. You can specify the architecture and provide the necessary parameters for that specific module. 
 ```
-[ape_control extruder]  # ape_control loads the dynamic loader, 'extruder' passes the name of the heater object. 'heater_bed' is another classic name.
+[ape_control extruder]
+# ape_control loads the dynamic loader, 'extruder' passes the name of the heater object. 'heater_bed' is another classic name.
 
 architecture: pp_control# Selects control_modules/pp_control.py
 # This is all that is neccesary to load your desired controller.
