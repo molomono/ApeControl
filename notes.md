@@ -54,5 +54,9 @@
     - [x] Removed the "profile" object used to initate the class, passing standard config instead. --> This might be worth revisiting. Making profile support optional
 - [ ] Add a look-ahead class which tracks arbitrary states. Such as future fan control speeds, temperature and flow rate.
 - [ ] HIGH PRIORITY: Look at the timing of object_lookups in the controller objects. I want to get rid of the necessity to run a post_init script.
-    - MPC kalico implementation does this with a if toolhead is None: object_lookup['toolhead'] type structure. Both post-init and try if none seem like sub optimal ways to handle this. --> after some research it might be solveable using a "Lazy Property Pattern" @property def heater(self): if self._heater is None: self._heater = printer.lookup_object("heater_name"); return self._heater --> the heater method behaves like an attribute which self-initializes if value is None.
+    - MPC kalico implementation does this with a if toolhead is None: object_lookup['toolhead'] type structure. Both post-init and try if none seem like sub optimal ways to handle this. --> after some research it might be solveable using a "Lazy Property Pattern" @property def heater(self): if self._heater is None: self._heater = printer.lookup_object("heater_name"); return self._heater --> the heater method behaves like an attribute which self-initializes if value is None. 
+    Alternitavely 3.8+ python with functools has the cached_property decorator which simplifies implementation:
+    @cached_property
+    def heater(self):
+        return self.lookup_object("heater_name") --> This does the same, but if the objects change without the control-class being renewed the values aren't automatically refound like in the strict @property manor.
 </details>
