@@ -122,8 +122,6 @@ class PPControl(BaseController):
             self.prev_temp_time = read_time
             self.prev_temp_deriv = temp_deriv
         
-    
-
     def ff_fb_control(self, read_time):
         """Combine feed-forward and feedback control in regulate state
         
@@ -138,7 +136,7 @@ class PPControl(BaseController):
             u_fb_pid = self.fb_pwm
             u_fb_bidirection = max(-self.heater_max_power, min(self.heater_max_power, self.feedback_controller.co))
         else:
-            u_fb_pid = 0.0
+            u_fb_pid = 0.0k
             u_fb_bidirection = 0.0
 
         # Access Feed Forward inputs
