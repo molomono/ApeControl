@@ -1,3 +1,6 @@
+# Original code:
+# https://github.com/KalicoCrew/kalico/blob/main/klippy/extras/control_mpc.py
+# Ported and modified to work with mainbranch klipper through the ApeControl extras module
 import logging
 import math
 import types
