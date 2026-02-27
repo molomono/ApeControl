@@ -87,4 +87,3 @@ class BaseController(ABC):
         if self._gcode_move is None:
             self._gcode_move = self.printer.lookup_object(self.heater_name)
             return self._gcode_move
-            
