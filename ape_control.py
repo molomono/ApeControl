@@ -26,7 +26,7 @@ class ApeControl:
             from .control_modules.mpc_control import ControlMPC 
             self.new_controller = ControlMPC(config)
         else:
-            logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm." % self.algo)
+            logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
         
         self.printer.register_event_handler("klippy:ready", self.exchange_controller)
 
@@ -42,8 +42,8 @@ class ApeControl:
                 pass
             logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", self.name, self.algo)
         except self.printer.config_error as e:
-            raise logging.error("ApeControl: %s Heater object could not be found for name %s",str(e), self.name)        
-       
+            logging.error("ApeControl: %s Heater object could not be found for name %s", str(e), self.name)        
+            raise e
 
 def load_config_prefix(config):
     return ApeControl(config)

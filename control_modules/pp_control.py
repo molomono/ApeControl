@@ -139,6 +139,7 @@ class PPControl(BaseController):
             u_fb_bidirection = max(-self.heater_max_power, min(self.heater_max_power, self.feedback_controller.co))
         else:
             u_fb_pid = 0.0
+            u_fb_bidirection = 0.0
 
         # Access Feed Forward inputs
         fan_speed = self.part_fan.get_status(read_time)['speed']
