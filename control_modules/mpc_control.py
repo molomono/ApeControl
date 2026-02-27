@@ -3,9 +3,6 @@ import math
 import types
 from .base_controller import BaseController
 
-#TODO: The measure power works, but i'm getting it in % of max power. so we must multiply it by self.heater_max_power
-
-
 AMBIENT_TEMP = 25.0
 PIN_MIN_TIME = 0.100
 
