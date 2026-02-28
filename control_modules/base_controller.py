@@ -17,6 +17,8 @@ class BaseController(ABC):
         # Lazy attributes
         self._gcode = None
         self._toolhead = None
+        self._gcode_move = None
+        self._part_fan = None
 
     def handle_ready(self):
         # Load Critical objects
@@ -49,3 +51,17 @@ class BaseController(ABC):
         if self._toolhead is None:
             self._toolhead = self.printer.lookup_object('toolhead')
         return self._toolhead
+    
+    @property
+    def part_fan(self):
+        """Lazy property, loads part_fan object upon first access"""
+        if self._part_fan is None:
+            self._part_fan = self.printer.lookup_object('part_fan')
+        return self._part_fan
+    
+    @property
+    def gcode_move(self):
+        """Lazy property, loads gcode_move object upon first access"""
+        if self._gcode_move is None:
+            self._gcode_move = self.printer.lookup_object('gcode_move')
+        return self._gcode_move

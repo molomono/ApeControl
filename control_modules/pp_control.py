@@ -88,10 +88,10 @@ class PPControl(BaseController):
         self.target_temp = target_temp
         time_diff = read_time - self.prev_temp_time
         temp_diff = temp - self.prev_temp
-        if time_diff >= self.min_deriv_time:
+        if time_diff >= self.ff.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:
-            temp_deriv = (self.prev_temp_deriv * (self.min_deriv_time - time_diff) + temp_diff) / self.min_deriv_time
+            temp_deriv = (self.prev_temp_deriv * (self.ff.min_deriv_time - time_diff) + temp_diff) / self.ff.min_deriv_time
 
         # Call the original PID to update its internal state and capture the PWM
         # This is critical: it updates pid_self.prev_temp, prev_temp_deriv, etc.
@@ -117,7 +117,7 @@ class PPControl(BaseController):
             else:
                 co = self._states[self.state](error, duration, read_time)
             
-            bounded_co = max(0., min(self.heater_max_power, co))
+            bounded_co = max(0., min(self.max_power, co))
             # Set PWM output (assumes heater object is accessible via self.printer)
             self.set_pwm(read_time, bounded_co)
 
@@ -140,7 +140,7 @@ class PPControl(BaseController):
         # this is where the fb function should actually be called
         if self.fb_enable:
             u_fb_pid = self.fb_pwm
-            u_fb_bidirection = max(-self.heater_max_power, min(self.heater_max_power, self.feedback_controller.co))
+            u_fb_bidirection = max(-self.max_power, min(self.max_power, self.feedback_controller.co))
         else:
             u_fb_pid = 0.0
             u_fb_bidirection = 0.0
@@ -150,17 +150,17 @@ class PPControl(BaseController):
         e_velocity = self.printer.lookup_object('motion_report').get_status(read_time)['live_extruder_velocity'] # realtime, we can also use look-ahead in later versions
         z_position = self.gcode_move.get_status()['position'][2]
         if z_position < 0.3:
-            fist_layer_compensation = self.dt_first_layer
+            fist_layer_compensation = self.ff.dt_first_layer
         else:
             fist_layer_compensation = 0.0
 
         # Low-pass filter the error due to stuttery velocity readings. This should be solved by using look-ahead velocity for some known time constant beween power and temperature reading.
-        self.e_velocity_filtered = max(0.0, (1 - self.ev_smoothing) * self.e_velocity_filtered + self.ev_smoothing * e_velocity)
+        self.e_velocity_filtered = max(0.0, (1 - self.ff.ev_smoothing) * self.e_velocity_filtered + self.ff.ev_smoothing * e_velocity)
         # Feed forward control logic
-        u_ff = (self.target_temp - fist_layer_compensation) * self.k_ss + fan_speed * self.k_fan + self.e_velocity_filtered * self.k_ev
+        u_ff = (self.target_temp - fist_layer_compensation) * self.ff.k_ss + fan_speed * self.ff.k_fan + self.e_velocity_filtered * self.ff.k_ev
 
         
-        logging.info("%s: Control Effort: FB_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (self.algo_name, u_fb_bidirection, u_ff, self.e_velocity_filtered * self.k_ev))
+        logging.info("%s: Control Effort: FB_PWM: %.3f, FF_PWM: %.3f, FF_ev: %.3f" % (self.algo_name, u_fb_bidirection, u_ff, self.e_velocity_filtered * self.ff.k_ev))
         
         if not self.fb_enable:
             return u_ff
@@ -185,7 +185,7 @@ class PPControl(BaseController):
 
     def _state_max_power(self, error, duration, read_time):
         """Max power state: heat until approaching target"""
-        if error < self.t_overshoot_up:
+        if error < self.ff.t_overshoot_up:
             self._transition("coast_up", read_time)
         return 1.0
 
@@ -194,24 +194,24 @@ class PPControl(BaseController):
         # Immediate jump to regulate if temp slope is 0 or less
         if self.prev_temp_deriv <= 0:
             self._transition("regulate", read_time)
-        elif duration >= self.coast_time_up:
+        elif duration >= self.ff.coast_time_up:
             self._transition("regulate", read_time)
         return 0.0
 
     def _state_regulate(self, error, duration, read_time):
         """Regulate state: maintain temperature with feedback control"""
-        if abs(error) < self.t_delta_regulate or duration < self.min_regulation_duration: # Temp within regulation window or min duration not met
+        if abs(error) < self.ff.t_delta_regulate or duration < self.ff.min_regulation_duration: # Temp within regulation window or min duration not met
             return self.ff_fb_control(read_time)
-        elif error > self.t_delta_regulate:  # Temp too far below target
+        elif error > self.ff.t_delta_regulate:  # Temp too far below target
             self._transition("max_power", read_time)
             return 1.0
-        elif error < -self.t_delta_regulate:  # Temp too far above target
+        elif error < -self.ff.t_delta_regulate:  # Temp too far above target
             self._transition("min_power", read_time)
             return 0.0
 
     def _state_min_power(self, error, duration, read_time):
         """Min power state: reduce power when overshot"""
-        if error > -self.t_overshoot_down:  # Error approaching zero from below
+        if error > -self.ff.t_overshoot_down:  # Error approaching zero from below
             self._transition("coast_down", read_time)
         return 0.0
 
@@ -220,7 +220,7 @@ class PPControl(BaseController):
         # Immediate jump to regulate if temp slope is 0 or more
         if self.prev_temp_deriv >= 0:
             self._transition("regulate", read_time)
-        elif duration >= self.coast_time_down:
+        elif duration >= self.ff.coast_time_down:
             self._transition("regulate", read_time)
         return 1.0
     
