@@ -13,8 +13,6 @@ class ApeControl:
         self.old_control = None
         self.new_controller = None
 
-        self.printer.register_event_handler("klippy:connect", self.switch_controllers)
-
         
     #def controller_lookup(self,config):
         # Logic to dynamically load from the ape_modules folder
@@ -31,6 +29,9 @@ class ApeControl:
             self.new_controller = ControlMPC(config)
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
+
+        self.printer.register_event_handler("klippy:connect", self.switch_controllers)
+
 
     def switch_controllers(self):
         # Following lookups are becoming obsolete
