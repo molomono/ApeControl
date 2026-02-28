@@ -60,6 +60,3 @@ class PIDControl(BaseController):
         temp_diff = target_temp - smoothed_temp
         return (abs(temp_diff) > PID_SETTLE_DELTA
                 or abs(self.prev_temp_deriv) > PID_SETTLE_SLOPE)
-
-    def set_pwm(self, read_time, value):
-        self.heater.set_pwm(read_time, value)
