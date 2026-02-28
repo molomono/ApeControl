@@ -55,7 +55,7 @@ class BaseController(ABC):
     def heater(self):
         """Finds the respective heater object if a child class tries to access this object""" 
         if self._heater is None:
-            self._heater = self.printer.lookup_object(self.heater_name)
+            self._heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
             return self._heater
 
     @property
