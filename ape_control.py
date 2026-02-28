@@ -12,7 +12,10 @@ class ApeControl:
         self.algo = config.get('control', 'pid_control')
         self.old_control = None
 
+        self.printer.register_event_handler("klippy:ready", self.exchange_controller)
+
         
+    def controller_lookup(self,config)
         # Logic to dynamically load from the ape_modules folder
         if self.algo == 'pp_control':
             from .control_modules.pp_calibrate import PPCalibrate
@@ -28,9 +31,10 @@ class ApeControl:
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
         
-        self.printer.register_event_handler("klippy:ready", self.exchange_controller)
+        #self.exchange_controller()
+    
 
-    def exchange_controller(self):
+    #def exchange_controller(self):
         # load objects
         pheaters = self.printer.lookup_object('heaters')
         try:
