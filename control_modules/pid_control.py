@@ -27,10 +27,10 @@ class PIDControl(BaseController):
         super().__init__(apeconfig)
         # Hardcoded Params
         self.algo_name = "PID-Control"
-        
+
         # Config Params
         self.config_params = apeconfig
-        
+
         self.temp_integ_max = 0.
         if self.config_params.Ki:
             self.temp_integ_max = self.config_params.max_power / self.config_params.Ki
@@ -38,6 +38,8 @@ class PIDControl(BaseController):
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
+
+        lazyload_test = self.gcode
 
     def temperature_update(self, read_time, temp, target_temp):
         time_diff = read_time - self.prev_temp_time
