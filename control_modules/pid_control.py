@@ -40,6 +40,7 @@ class PIDControl(BaseController):
         self.prev_temp_integ = 0.
 
         lazyload_test = self.gcode
+        logging.info("ApeControl: %s", lazyload_test)
 
     def temperature_update(self, read_time, temp, target_temp):
         time_diff = read_time - self.prev_temp_time
