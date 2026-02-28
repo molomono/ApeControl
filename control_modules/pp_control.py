@@ -201,7 +201,7 @@ class PPControl(BaseController):
     def _state_regulate(self, error, duration, read_time):
         """Regulate state: maintain temperature with feedback control"""
         if abs(error) < self.config_params.ff.t_delta_regulate or duration < self.config_params.ff.min_regulation_duration: # Temp within regulation window or min duration not met
-            return self.config_params.ff_fb_control(read_time)
+            return self.ff_fb_control(read_time)
         elif error > self.config_params.ff.t_delta_regulate:  # Temp too far below target
             self._transition("max_power", read_time)
             return 1.0
