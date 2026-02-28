@@ -33,7 +33,7 @@ class ControlMPC(BaseController):
         
         self.state_block_temp = AMBIENT_TEMP # default states before getting updated by post_init
         self.state_sensor_temp = self.state_block_temp
-        self.toolhead = None # the none-check that calls this can also be used to call post_init
+        #self.toolhead = None # the none-check that calls this can also be used to call post_init
 
         if not register:
             return
@@ -316,8 +316,8 @@ class ControlMPC(BaseController):
         extrude_speed_prev = 0.0
         extrude_speed_next = 0.0
         if target_temp != 0.0:
-            if self.toolhead is None:
-                self.toolhead = self.printer.lookup_object("toolhead")
+            #if self.toolhead is None:
+            #    self.toolhead = self.printer.lookup_object("toolhead")
             if self.toolhead is not None:
                 extruder = self.toolhead.get_extruder()
                 if (
