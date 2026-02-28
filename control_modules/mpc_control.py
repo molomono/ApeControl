@@ -33,8 +33,7 @@ class ControlMPC(BaseController):
         
         self.state_block_temp = AMBIENT_TEMP # default states before getting updated by post_init
         self.state_sensor_temp = self.state_block_temp
-        self.toolhead = None # the none-check that calls this can also be used to call post_init
-
+        
         if not register:
             return
         
