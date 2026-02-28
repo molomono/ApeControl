@@ -51,7 +51,6 @@ class BaseController(ABC):
         """Set pwm class, can be overwriten for things like AutoTune classes"""
         if self.heater is None:
             logging.info("ApeControl: heater  %s is not yet instanciated, skipping set_pwm...", self.heater_name)
-            self.heater # try to reload the property
             return
         self.heater.set_pwm(read_time, value)
 
@@ -59,7 +58,7 @@ class BaseController(ABC):
     def heater(self):
         """Finds the respective heater object if a child class tries to access this object""" 
         if self._heater is None:
-            self._heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+            self._heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name, None)
             return self._heater
 
     @property

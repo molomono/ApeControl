@@ -13,7 +13,7 @@ class ApeControl:
         self.old_control = None
         self.new_controller = None
 
-        self.printer.register_event_handler("klippy:ready", self.switch_controllers)
+        self.printer.register_event_handler("klippy:connect", self.switch_controllers)
 
         
     #def controller_lookup(self,config):
