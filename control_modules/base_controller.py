@@ -10,20 +10,15 @@ class BaseController(ABC):
     def __init__(self, config, apeconfig):
         self.config = config
         self.printer = apeconfig.printer # This is a bit of an inneficiency still
-        self.heater_name = config.get_name().split()[-1]
+        #self.heater_name = config.get_name().split()[-1]
         self.target_temp = None
 
-        # Load Params
         self.config_params = apeconfig
-        # Relevant objects
-        # self.heater = None
-        # Universal config parameters
-        #self.heater_max_power = config.getfloat('max_power', 1.0)
         
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
     def handle_ready(self):
-        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.config_params.heater_name)
         self.gcode = self.printer.lookup_object('gcode')
         # Useful objects for proactive power compensation control logic
         self.part_fan = self.printer.lookup_object('fan')
