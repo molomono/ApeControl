@@ -26,6 +26,12 @@ class BaseController(ABC):
         self._reactor = None
         self._gcode_move = None
 
+        #self.printer.register_event_handler("klippy:connect", self._handle_connect)
+
+    #def _handle_connect(self):
+        # Now it is safe to look up other objects
+    #    self._heater = self.printer.lookup_object(self.heater_name)
+
     def migrate_objects(self, old_ape_controller):
         '''Migrates preloaded objects from the previous ApeControl class'''
         self.printer = old_ape_controller.printer
@@ -58,7 +64,7 @@ class BaseController(ABC):
     def heater(self):
         """Finds the respective heater object if a child class tries to access this object""" 
         if self._heater is None:
-            self._heater = self.printer.lookup_object('heaters', None).lookup_heater(self.heater_name)
+            self._heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
             return self._heater
 
     @property
