@@ -29,11 +29,11 @@ class PIDControl(BaseController):
         self.algo_name = "PID-Control"
         
         # Config Params
-        #self.config_params = apeconfig
+        self.config_params = apeconfig
         
         self.temp_integ_max = 0.
         if self.config_params.Ki:
-            self.temp_integ_max = self.heater_max_power / self.config_params.Ki
+            self.temp_integ_max = self.config_params.max_power / self.config_params.Ki
         self.prev_temp = AMBIENT_TEMP
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
