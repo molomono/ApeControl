@@ -42,7 +42,7 @@ class ApeControl:
         try:
             heater = pheaters.lookup_heater(self.name)
             logging.info("ApeControl: Heater object found")
-            self.new_controller = self.ControllerClass(None, self.apeconfig)
+            self.new_controller = self.ControllerClass(self.apeconfig)
             logging.info("ApeControl: Controller built")
             self.old_control = heater.set_control(self.new_controller) # exchange control objects
             try:
