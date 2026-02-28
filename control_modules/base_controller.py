@@ -13,14 +13,14 @@ class BaseController(ABC):
         self.reactor = self.printer.get_reactor()
         self.target_temp = None
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
+        
+        # Lazy attributes
+        self._gcode = None
+        self._toolhead = None
 
     def handle_ready(self):
         # Load Critical objects
         self.heater = self.printer.lookup_object('heaters').lookup_heater(self.config_params.heater_name)
-        #self.gcode = self.printer.lookup_object('gcode')
-        #self.part_fan = self.printer.lookup_object('fan')
-        #self.gcode_move = self.printer.lookup_object('gcode_move')
-        
 
     @abstractmethod
     def temperature_update(self, read_time, temp, target_temp):
@@ -35,8 +35,15 @@ class BaseController(ABC):
     def set_pwm(self, read_time, value):
         """Can be e overwriten for things like AutoTune classes"""
         self.heater.set_pwm(read_time, value)
-    '''
-    def set_pwm(self, read_time, value): # simplest form, place inside your control class
-        self.heater.set_pwm(read_time, value)
-        
-    '''
+
+    @property
+    def gcode(self):
+        if self._gcode is None:
+            self._gcode = self.printer.lookup_object('gcode')
+        return self._gcode
+    
+    @property
+    def toolhead(self):
+        if self._toolhead is None:
+            self._toolhead = self.printer.lookup_object('toolhead')
+        return self._toolhead
