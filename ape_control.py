@@ -19,11 +19,21 @@ class ApeControl:
         if self.algo == 'pp_control':
             from .control_modules.pp_calibrate import PPCalibrate
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) # must import this before the controller
-            from .control_modules.pp_control import PPControl 
-            self.new_controller = PPControl(config)
+            
+            from .control_modules.pp_control import PPControl, PPConfig 
+            from .control_modules.pid_control import PIDConfig
+            self.apeconfig = ApeConfig(config)
+            logging.info("ApeControl: PP config loaded")
+            self.apeconfig.add_configvars_ff(PPConfig)
+            logging.info("ApeControl: PID config loaded")
+            self.apeconfig.add_configvars_fb(PIDConfig)
+            logging.info("ApeControl: PP object found")
+            self.ControllerClass = PPControl
+
         elif self.algo == 'pid':
             from .control_modules.pid_control import PIDControl, PIDConfig
-            self.apeconfig = ApeConfig(config, PIDConfig)
+            self.apeconfig = ApeConfig(config)
+            self.apeconfig.add_configvars_local(PIDConfig)
             logging.info("ApeControl: PID config loaded")
             self.ControllerClass = PIDControl
             logging.info("ApeControl: PID object found")

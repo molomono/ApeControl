@@ -11,13 +11,8 @@ SETTLE_DELTA = 1.
 SETTLE_SLOPE = .1
 AMBIENT_TEMP = 25.
 
-class PPControl(BaseController):
+class PPConfig:
     def __init__(self, config):
-        # Initialize the base (hijacks Klipper)
-        super().__init__(config)
-        # Hardcoded Params
-        self.algo_name = "PP-Control"
-
         # Load Architecture-specific parameters
         self.k_ss = config.getfloat('k_ss', 0.0)
         self.k_fan = config.getfloat('k_fan', 0.0)
@@ -40,6 +35,13 @@ class PPControl(BaseController):
 
         # Min derivative time, for computing temp velocity
         self.min_deriv_time = config.getfloat('deriv_time', 2., above=0.)
+
+class PPControl(BaseController):
+    def __init__(self, apeconfig):
+        # Initialize the base (hijacks Klipper)
+        super().__init__(apeconfig)
+        # Hardcoded Params
+        self.algo_name = "PP-Control"
 
         ## State Machine State
         self.state = "off"

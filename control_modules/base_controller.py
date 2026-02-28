@@ -38,12 +38,14 @@ class BaseController(ABC):
 
     @property
     def gcode(self):
+        """Lazy property, loads gcode object upon first access"""
         if self._gcode is None:
             self._gcode = self.printer.lookup_object('gcode')
         return self._gcode
     
     @property
     def toolhead(self):
+        """Lazy property, loads toolhead object upon first access"""
         if self._toolhead is None:
             self._toolhead = self.printer.lookup_object('toolhead')
         return self._toolhead
