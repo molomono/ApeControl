@@ -61,11 +61,11 @@ class ControlMPC(BaseController):
     #    self.handle_ready()
     #    self.heater_max_power = self.heater.get_max_power() * self.const_heater_power
 
-    #    self.want_ambient_refresh = self.ambient_sensor is not None
-    #    self.state_block_temp = (
-    #        AMBIENT_TEMP if load_clean else self._heater_temp()
-    #    )
-    #    self.state_sensor_temp = self.state_block_temp
+        self.want_ambient_refresh = self.ambient_sensor is not None
+        self.state_block_temp = (
+            AMBIENT_TEMP if load_clean else self._heater_temp()
+        )
+        self.state_sensor_temp = self.state_block_temp
         
 
     cmd_MPC_SET_help = "Set MPC parameter"
