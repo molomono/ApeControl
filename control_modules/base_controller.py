@@ -56,7 +56,7 @@ class BaseController(ABC):
     def part_fan(self):
         """Lazy property, loads part_fan object upon first access"""
         if self._part_fan is None:
-            self._part_fan = self.printer.lookup_object('part_fan')
+            self._part_fan = self.printer.lookup_object('fan')
         return self._part_fan
     
     @property
