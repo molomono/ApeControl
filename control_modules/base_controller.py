@@ -7,15 +7,18 @@ import logging
 from abc import ABC, abstractmethod
 
 class BaseController(ABC):
-    def __init__(self, config):
+    def __init__(self, config, apeconfig):
         self.config = config
-        self.printer = config.get_printer()
+        self.printer = apeconfig.printer # This is a bit of an inneficiency still
         self.heater_name = config.get_name().split()[-1]
         self.target_temp = None
+
+        # Load Params
+        self.config_params = apeconfig
         # Relevant objects
         # self.heater = None
         # Universal config parameters
-        self.heater_max_power = config.getfloat('max_power', 1.0)
+        #self.heater_max_power = config.getfloat('max_power', 1.0)
         
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
