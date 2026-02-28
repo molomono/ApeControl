@@ -58,40 +58,40 @@ class BaseController(ABC):
     def heater(self):
         """Finds the respective heater object if a child class tries to access this object""" 
         if self._heater is None:
-            self._heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name, None)
+            self._heater = self.printer.lookup_object('heaters', None).lookup_heater(self.heater_name)
             return self._heater
 
     @property
     def toolhead(self):
         """Finds the respective toolhead object if a child class tries to access this object""" 
         if self._toolhead is None:
-            self._toolhead = self.printer.lookup_object(self.heater_name)
+            self._toolhead = self.printer.lookup_object("toolhead", None)
             return self._toolhead
 
     @property
     def gcode(self):
         """Finds the respective gcode object if a child class tries to access this object""" 
         if self._gcode is None:
-            self._gcode = self.printer.lookup_object(self.heater_name)
+            self._gcode = self.printer.lookup_object("gcode", None)
             return self._gcode
 
     @property
     def part_fan(self):
         """Finds the respective partfan object if a child class tries to access this object""" 
         if self._part_fan is None:
-            self._part_fan = self.printer.lookup_object(self.heater_name)
+            self._part_fan = self.printer.lookup_object("fan_name", None)
             return self._part_fan
 
     @property
     def reactor(self):
         """Finds the respective reactor object if a child class tries to access this object""" 
         if self._reactor is None:
-            self._reactor = self.printer.lookup_object(self.heater_name)
+            self._reactor = self.printer.get_reactor()
             return self._reactor
 
     @property
     def gcode_move(self):
         """Finds the respective gcode_move object if a child class tries to access this object""" 
         if self._gcode_move is None:
-            self._gcode_move = self.printer.lookup_object(self.heater_name)
+            self._gcode_move = self.printer.lookup_object("gcode_move")
             return self._gcode_move
