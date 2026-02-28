@@ -26,14 +26,16 @@ class PIDControl(BaseController):
         self.Ki = config.getfloat('pid_Ki', 0.0) / PID_PARAM_BASE
         self.Kd = config.getfloat('pid_Kd', 0.0) / PID_PARAM_BASE
         self.min_deriv_time = config.getfloat('pid_deriv_time', 2., above=0.)
-        self.temp_integ_max = 0.
         
+        # Initial vars
+        self.temp_integ_max = 0.
         if self.Ki:
-            self.temp_integ_max = self.heater_max_power / self.Ki
+            self.temp_integ_max = self.max_power / self.Ki
         self.prev_temp = AMBIENT_TEMP
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
+        self.co = 0.
 
     def temperature_update(self, read_time, temp, target_temp):
         time_diff = read_time - self.prev_temp_time
@@ -46,10 +48,8 @@ class PIDControl(BaseController):
         temp_integ = self.prev_temp_integ + temp_err * time_diff
         temp_integ = max(0., min(self.temp_integ_max, temp_integ))
         self.co = self.Kp * temp_err + self.Ki * temp_integ - self.Kd * temp_deriv
-        bounded_co = max(0., min(self.heater_max_power, self.co))
-        # Set PWM output (assumes heater object is accessible via self.printer)
+        bounded_co = max(0., min(self.max_power, self.co))
         self.set_pwm(read_time, bounded_co)
-        # optional self.heater.set_pwm(read_time, bounded_co)
         self.prev_temp = temp
         self.prev_temp_time = read_time
         self.prev_temp_deriv = temp_deriv

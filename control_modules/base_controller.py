@@ -21,18 +21,18 @@ class BaseController(ABC):
         self._gcode_move = None
 
         # Universal config parameters
-        self.heater_max_power = config.getfloat('max_power', 1.0)
+        self.max_power = config.getfloat('max_power', 1.0)
 
         # Event that triggers handle_ready() method call
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+        #self.printer.register_event_handler("klippy:ready", self.handle_ready)
 
-    def handle_ready(self):
-        """Initialization code to run after klippy:ready event is triggered""" 
-        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
-        self.gcode = self.printer.lookup_object('gcode')
-        self.part_fan = self.printer.lookup_object('fan')
-        self.gcode_move = self.printer.lookup_object('gcode_move')
-        self.reactor = self.printer.get_reactor()
+    #def handle_ready(self):
+    #    """Initialization code to run after klippy:ready event is triggered""" 
+    #    self.heater = self.printer.lookup_object('heaters').lookup_heater(self.heater_name)
+    #    self.gcode = self.printer.lookup_object('gcode')
+    #    self.part_fan = self.printer.lookup_object('fan')
+    #    self.gcode_move = self.printer.lookup_object('gcode_move')
+    #    self.reactor = self.printer.get_reactor()
 
     @abstractmethod
     def temperature_update(self, read_time, temp, target_temp):

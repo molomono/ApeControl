@@ -15,9 +15,8 @@ class PPCalibrate:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.heater_name = config.get_name().split()[-1] # (heater) name
-        #gcode = self.printer.lookup_object('gcode')
-        #gcode.register_command('PP_CALIBRATE', self.cmd_PP_CALIBRATE, # might need to change this to a mux function later
-        #                       desc=self.cmd_PP_CALIBRATE_help)
+
+        # Register Multiplicative Command, bound to 'HEATER' name/object
         gcode = self.printer.lookup_object("gcode")
         gcode.register_mux_command(
             "PP_CALIBRATE",
@@ -26,7 +25,6 @@ class PPCalibrate:
             self.cmd_PP_CALIBRATE,
             desc=self.cmd_PP_CALIBRATE_help,
         )
-        
         
     cmd_PP_CALIBRATE_help = "Run PP calibration test"
     
@@ -135,7 +133,7 @@ class ControlAutoTune:
         self.configvars = SimpleNamespace()
         self.heater = heater
         self.target = target # used for Kss computation later
-        self.heater_max_power = heater.get_max_power()
+        self.max_power = heater.get_max_power()
         self.calibrate_temp = target
         # Heating control
         self.heating = False
@@ -170,7 +168,7 @@ class ControlAutoTune:
             self.heater.alter_target(self.calibrate_temp)
         # Check if this temperature is a peak and record it if so
         if self.heating:
-            self.set_pwm(read_time, self.heater_max_power)
+            self.set_pwm(read_time, self.max_power)
             if temp < self.peak:
                 self.peak = temp
                 self.peak_time = read_time
@@ -207,7 +205,7 @@ class ControlAutoTune:
 
         # Use Astrom-Hagglund method to estimate Ku and Tu
         amplitude = .5 * abs(temp_diff)
-        Ku = 4. * self.heater_max_power / (math.pi * amplitude)
+        Ku = 4. * self.max_power / (math.pi * amplitude)
         Tu = time_diff
        
         # Estimate Kss from on-off dutycycle to maintain averaged target temp
@@ -343,7 +341,7 @@ class SSAutoTune:
         self.configvars = SimpleNamespace()
         self.heater = heater
         self.target = target # used for Kss computation later
-        self.heater_max_power = heater.get_max_power()
+        self.max_power = heater.get_max_power()
         self.calibrate_temp = target
         # Heating control
         self.heating = False
