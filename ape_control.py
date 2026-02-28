@@ -24,16 +24,16 @@ class ApeControl:
             from .control_modules.pid_control import PIDConfig
             self.apeconfig = ApeConfig(config)
             logging.info("ApeControl: PP config loaded")
-            self.apeconfig.add_configvars_ff(PPConfig)
+            self.apeconfig.add_configvars_ff(PPConfig(config))
             logging.info("ApeControl: PID config loaded")
-            self.apeconfig.add_configvars_fb(PIDConfig)
+            self.apeconfig.add_configvars_fb(PIDConfig(config))
             logging.info("ApeControl: PP object found")
             self.ControllerClass = PPControl
 
         elif self.algo == 'pid':
             from .control_modules.pid_control import PIDControl, PIDConfig
             self.apeconfig = ApeConfig(config)
-            self.apeconfig.add_configvars_local(PIDConfig)
+            self.apeconfig.add_configvars_local(PIDConfig(config))
             logging.info("ApeControl: PID config loaded")
             self.ControllerClass = PIDControl
             logging.info("ApeControl: PID object found")
