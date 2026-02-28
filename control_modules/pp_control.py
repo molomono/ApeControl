@@ -117,7 +117,7 @@ class PPControl(BaseController):
             else:
                 co = self._states[self.state](error, duration, read_time)
             
-            bounded_co = max(0., min(self.max_power, co))
+            bounded_co = max(0., min(self.config_params.max_power, co))
             # Set PWM output (assumes heater object is accessible via self.printer)
             self.set_pwm(read_time, bounded_co)
 
@@ -140,7 +140,7 @@ class PPControl(BaseController):
         # this is where the fb function should actually be called
         if self.fb_enable:
             u_fb_pid = self.fb_pwm
-            u_fb_bidirection = max(-self.max_power, min(self.max_power, self.feedback_controller.co))
+            u_fb_bidirection = max(-self.config_params.max_power, min(self.config_params.max_power, self.feedback_controller.co))
         else:
             u_fb_pid = 0.0
             u_fb_bidirection = 0.0
