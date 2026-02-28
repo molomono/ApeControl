@@ -142,8 +142,10 @@ class ControlMPC(BaseController):
         
         #self._load_config_variables(config)
         #self.profile = self.get_profile()
-        self.add_configvars_local = apeconfig.add_configvars_local
-        self.add_configvars_local(apeconfig)
+        # The method below is what _load_profile does for kalico --> The Reason i'm making all these changes is to keep independance and avoid code duplication
+        # TODO New classes only require a AlgoConfig AlgoControl and AlgoCalibrate class to work in ApeControl, making everything communicate requires only a change to ape_config ALGO_MAP and ape_control
+        # But i'm pretty sure i can distil that down to 1 singular change with ALGO_MAP in the future
+        self._make_configvars_local(apeconfig)
         
         #logging.info("ApeControl: MPC profile/configvars %s", self.profile)
 
@@ -372,9 +374,9 @@ class ControlMPC(BaseController):
         # derived quantities
         self._update_filament_const()
 
-    #def _make_configvars_local(self, configobject):
-    #    """Add config variables to the local namespace"""
-    #    self.__dict__.update(configobject.__dict__) # does the same as the function below but 'cleaner'
+    def _make_configvars_local(self, configobject):
+        """Add config variables to the local namespace"""
+        self.__dict__.update(configobject.__dict__) # does the same as the function below but 'cleaner'
 
     def _load_profile(self):
         """Load constants from a profile dictionary.
