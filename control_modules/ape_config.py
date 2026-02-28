@@ -7,8 +7,6 @@ class ApeConfig:
         self.algorithm = config.get('control', 'pid')
         
         # This will hold the specialized config (e.g., PPConfig)
-        self.config_params = ConfigObject(config)
-
-    #def load_params(self, config, configObject):
-        # Explicitly defining the namespace
-    #    self.algo_vars = configObject(config) 
+        # It merges the attributes in the ConfigObject with this classes namespace
+        self.__dict__.update(ConfigObject(config).__dict__)
+        
