@@ -15,7 +15,7 @@ class ApeControl:
 
         
         # Logic to dynamically load from the ape_modules folder
-        if self.algo == 'pp_control':
+        if self.algo == 'pp':
             from .control_modules.pp_calibrate import PPCalibrate
             self.printer.add_object('pp_calibrate', PPCalibrate(config)) # must import this before the controller
             
