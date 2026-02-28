@@ -58,6 +58,7 @@ class BaseController(ABC):
         if self._heater is None:
             logging.info("ApeControl: %s not ready yet", self.heater_name)
             return
+        logging.info("%s", self.heater)
         self.heater.set_pwm(read_time, value)
 
     @property
