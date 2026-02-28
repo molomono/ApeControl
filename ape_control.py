@@ -33,10 +33,11 @@ class ApeControl:
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
         
-        self.printer.register_event_handler("klippy:ready", self.exchange_controller)
+        self.printer.register_event_handler("klippy:connect", self.exchange_controller)
 
     def exchange_controller(self):
         # load objects
+        logging.info("ApeControl: klippy:connect called")
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(self.name)
