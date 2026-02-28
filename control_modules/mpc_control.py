@@ -320,23 +320,21 @@ class ControlMPC(BaseController):
         extrude_speed_prev = 0.0
         extrude_speed_next = 0.0
         if target_temp != 0.0:
-            if self.toolhead is None:
-                self.toolhead = self.printer.lookup_object("toolhead")
-            if self.toolhead is not None:
-                extruder = self.toolhead.get_extruder()
-                if (
-                    hasattr(extruder, "find_past_position")
-                    and extruder.get_heater() == self.heater
-                ):
-                    pos = extruder.find_past_position(read_time)
-
-                    pos_prev = extruder.find_past_position(read_time - dt)
-                    pos_moved = max(-self.const_maximum_retract, pos - pos_prev)
-                    extrude_speed_prev = pos_moved / dt
-
-                    pos_next = extruder.find_past_position(read_time + dt)
-                    pos_move = max(-self.const_maximum_retract, pos_next - pos)
-                    extrude_speed_next = pos_move / dt
+            #if self.toolhead is None:
+            #    self.toolhead = self.printer.lookup_object("toolhead")
+            #if self.toolhead is not None:
+            extruder = self.toolhead.get_extruder()
+            if (
+                hasattr(extruder, "find_past_position")
+                and extruder.get_heater() == self.heater
+            ):
+                pos = extruder.find_past_position(read_time)
+                pos_prev = extruder.find_past_position(read_time - dt)
+                pos_moved = max(-self.const_maximum_retract, pos - pos_prev)
+                extrude_speed_prev = pos_moved / dt
+                pos_next = extruder.find_past_position(read_time + dt)
+                pos_move = max(-self.const_maximum_retract, pos_next - pos)
+                extrude_speed_next = pos_move / dt
 
         # Modulate ambient transfer coefficient with fan speed
         ambient_transfer = self.const_ambient_transfer
