@@ -23,8 +23,8 @@ class PIDConfig:
         self.min_deriv_time = config.getfloat('pid_deriv_time', 2., above=0.)
 
 class PIDControl(BaseController):
-    def __init__(self, config, apeconfig=None):
-        super().__init__(config, apeconfig)
+    def __init__(self, apeconfig=None):
+        super().__init__(apeconfig)
         # Hardcoded Params
         self.algo_name = "PID-Control"
         
