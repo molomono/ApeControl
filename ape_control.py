@@ -38,7 +38,7 @@ class ApeControl:
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(self.name)
-            self.new_controller._heater = heater
+            #self.new_controller._heater = heater
             self.old_control = heater.set_control(self.new_controller)
             logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", self.name, self.algo)
         except self.printer.config_error as e:
