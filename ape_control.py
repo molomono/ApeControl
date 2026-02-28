@@ -40,6 +40,10 @@ class ApeControl:
             heater = pheaters.lookup_heater(self.name)
             self.new_controller._heater = heater
             self.old_control = heater.set_control(self.new_controller)
+            try:
+                self.new_controller.post_init()
+            except:
+                pass
             logging.info("ApeControl: Heater object '%s' controller exchanged with %s algorithm", self.name, self.algo)
         except self.printer.config_error as e:
             logging.error("ApeControl: %s Heater object could not be found for name %s", str(e), self.name)        
