@@ -15,7 +15,7 @@ class ApeControl:
         self.printer.register_event_handler("klippy:ready", self.exchange_controller)
 
         
-    def controller_lookup(self,config)
+    def controller_lookup(self,config):
         # Logic to dynamically load from the ape_modules folder
         if self.algo == 'pp_control':
             from .control_modules.pp_calibrate import PPCalibrate
