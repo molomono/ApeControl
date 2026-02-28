@@ -12,7 +12,7 @@ class ApeControl:
         self.algo = config.get('control', 'pid_control')
         self.old_control = None
 
-        self.printer.register_event_handler("klippy:ready", self.exchange_controller)
+        self.printer.register_event_handler("klippy:ready", self.controller_lookup)
 
         
     def controller_lookup(self,config):
