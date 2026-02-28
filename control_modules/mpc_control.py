@@ -128,6 +128,10 @@ class ControlMPC(BaseController):
     def cmd_MPC_CALIBRATE(self, gcmd):
         cal = MpcCalibrate(self.printer, self.heater, self)
         cal.run(gcmd)
+        # TODO: Make the calibration class inherrit the base MpcCalibrate(BaseController)
+        # cal = MpcCalibrate(None) --> specify no config with None
+        # cal.migrate_objects(self) --> This coppies the base-class attributes from this instance to the new control class cal 
+        # cal.run(gcmd) --> pass gcmd, where the target (and heater) are specified
         # Clean up the monkey patch wait_while method
         if hasattr(self.printer, 'wait_while'):
             delattr(self.printer, 'wait_while')
@@ -433,7 +437,7 @@ class ControlMPC(BaseController):
             power = max(
                 0.0,
                 min(
-                    self.heater_max_power,
+                    self.max_power,
                     heating_power + loss_ambient + loss_filament,
                 ),
             )
@@ -575,7 +579,7 @@ class MpcCalibrate:
             samples = self.heatup_test(gcmd, target_temp, control)
             first_res = self.process_first_pass(
                 samples,
-                self.orig_control.heater_max_power,
+                self.orig_control.max_power,
                 ambient_temp,
                 threshold_temp,
                 use_analytic,
@@ -595,7 +599,8 @@ class MpcCalibrate:
             #new_control = ControlMPC(profile, self.heater, False, False)
             ## TODO: I'm sure this can be improved upon
             new_control = ControlMPC(self.orig_control.config, False, False)
-            new_control.post_init(False, False) # Post init script Must be run after initializing ControlMPC -- dirty but it works
+            #new_control.post_init(False, False) # Post init script Must be run after initializing ControlMPC -- dirty but it works
+            # new_control.migrate_objects(self) --> more appropriate way of handling both the self.orig_control.config AND the post_init call, we share releveant active klipper objects
 
             new_control.const_block_heat_capacity = first_res["block_heat_capacity"]
             new_control.const_ambient_transfer = first_res["ambient_transfer"]
@@ -617,7 +622,7 @@ class MpcCalibrate:
                 first_res,
                 transfer_res,
                 ambient_temp,
-                self.orig_control.heater_max_power,
+                self.orig_control.max_power,
             )
             logging.info("Second pass: %s", second_res)
 
@@ -798,7 +803,7 @@ class MpcCalibrate:
         fan_powers = []
         if fan is None:
             power_base = self.measure_power(
-                ambient_max_measure_time, ambient_measure_sample_time, self.orig_control.heater_max_power
+                ambient_max_measure_time, ambient_measure_sample_time, self.orig_control.max_power
             )
             gcmd.respond_info(f"Average stable power: {power_base} W")
         else:
@@ -812,7 +817,7 @@ class MpcCalibrate:
                     f"Temperature stable, measuring power usage with {speed * 100.0:.0f}% fan speed"
                 )
                 power = self.measure_power(
-                    ambient_max_measure_time, ambient_measure_sample_time, self.orig_control.heater_max_power
+                    ambient_max_measure_time, ambient_measure_sample_time, self.orig_control.max_power
                 )
                 gcmd.respond_info(
                     f"{speed * 100.0:.0f}% fan average power: {power:.2f} W"
