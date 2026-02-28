@@ -37,8 +37,10 @@ class ApeControl:
 
             #logging.info("ApeControl: PID object found")
         elif self.algo == 'mpc':
-            from .control_modules.mpc_control import ControlMPC
-            self.new_controller = ControlMPC(config)
+            from .control_modules.mpc_control import MPCConfig
+            self.apeconfig = ApeConfig(config)
+            self.apeconfig.add_configvars_local(MPCConfig(config))
+            #self.new_controller = ControlMPC(config)
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
         

@@ -13,14 +13,138 @@ FILAMENT_TEMP_SRC_AMBIENT = "ambient"
 FILAMENT_TEMP_SRC_FIXED = "fixed"
 FILAMENT_TEMP_SRC_SENSOR = "sensor"
 
+class MPCConfig:
+    def __init__(self,config):
+        self.const_block_heat_capacity = config.getfloat(
+            "block_heat_capacity", above=0.0, default=None
+        )
+        self.const_ambient_transfer = config.getfloat(
+            "ambient_transfer", minval=0.0, default=None
+        )
+        self.const_target_reach_time = config.getfloat(
+            "target_reach_time", above=0.0, default=2.0
+        )
+        self.const_smoothing = config.getfloat(
+            "smoothing", above=0.0, maxval=1.0, default=0.83
+        )
+        self.const_heater_power = config.getfloat(
+            "heater_power", above=0.0
+        )
+        self.const_sensor_responsiveness = config.getfloat(
+            "sensor_responsiveness", above=0.0, default=None
+        )
+        self.const_min_ambient_change = config.getfloat(
+            "min_ambient_change", above=0.0, default=1.0
+        )
+        self.const_steady_state_rate = config.getfloat(
+            "steady_state_rate", above=0.0, default=0.5
+        )
+        self.const_filament_diameter = config.getfloat(
+            "filament_diameter", above=0.0, default=1.75
+        )
+        self.const_filament_density = config.getfloat(
+            "filament_density", above=0.0, default=1.2
+        )
+        self.const_filament_heat_capacity = (
+            config.getfloat(
+                "filament_heat_capacity", above=0.0, default=1.8
+            )
+        )
+        self.const_maximum_retract = config.getfloat(
+            "maximum_retract", above=0.0, default=2.0
+        )
+
+        filament_temp_src_raw = config.get(
+            "filament_temperature_source", "ambient"
+        )
+        temp = filament_temp_src_raw.lower().strip()
+        if temp == "sensor":
+            filament_temp_src = (FILAMENT_TEMP_SRC_SENSOR,)
+        elif temp == "ambient":
+            filament_temp_src = (FILAMENT_TEMP_SRC_AMBIENT,)
+        else:
+            try:
+                value = float(temp)
+            except ValueError:
+                raise config.error(
+                    f"Unable to parse option 'filament_temperature_source' in section '{config.get_name()}'"
+                )
+            filament_temp_src = (FILAMENT_TEMP_SRC_FIXED, value)
+        self.filament_temp_src = filament_temp_src
+
+        ambient_sensor_name = config.get(
+            "ambient_temp_sensor", None
+        )
+        ambient_sensor = None
+        if ambient_sensor_name is not None:
+            ambient_sensor = config.get_printer().load_object(
+                config,
+                ambient_sensor_name,
+                None,
+            )
+            if ambient_sensor is None:
+                ambient_sensor = (
+                    config.get_printer().lookup_object(
+                        ambient_sensor_name, None
+                    )
+                )
+            if ambient_sensor is None:
+                raise config.error(
+                    f"Unknown ambient_temp_sensor '{ambient_sensor_name}' specified"
+                )
+        self.ambient_sensor = ambient_sensor
+
+        fan_name = config.get("cooling_fan", None)
+        fan = None
+        if fan_name is not None:
+            fan_obj = config.get_printer().load_object(
+                config,
+                fan_name,
+                None,
+            )
+            if fan_obj is None:
+                fan_obj = config.get_printer().lookup_object(
+                    fan_name, None
+                )
+            if fan_obj is None:
+                raise config.error(
+                    f"Unknown part_cooling_fan '{fan_name}' specified"
+                )
+            if not hasattr(fan_obj, "fan") or not hasattr(
+                fan_obj.fan, "set_speed"
+            ):
+                raise config.error(
+                    f"part_cooling_fan '{fan_name}' is not a valid fan object"
+                )
+            fan = fan_obj.fan
+        self.cooling_fan = fan
+
+        self.const_fan_ambient_transfer = (
+            config.getfloatlist("fan_ambient_transfer", [])
+        )
+        # derived quantities
+        self._update_filament_const()
+
+    def _update_filament_const(self):
+        radius = self.const_filament_diameter / 2.0
+        self.const_filament_cross_section_heat_capacity = (
+            (radius * radius)  # mm^2
+            * math.pi  # 1
+            / 1000.0  # mm^3 => cm^3
+            * self.const_filament_density  # g/cm^3
+            * self.const_filament_heat_capacity  # J/g/K
+        )
+
 
 class ControlMPC(BaseController):
-    def __init__(self, config, load_clean=False, register=True):
-        super().__init__(config)
+    def __init__(self, apeconfig, load_clean=False, register=True):
+        super().__init__(apeconfig)
         
-        self._load_config_variables(config)
-        self.profile = self.get_profile()
-        logging.info("ApeControl: MPC profile/configvars %s", self.profile)
+        #self._load_config_variables(config)
+        #self.profile = self.get_profile()
+        self._make_configvars_local(apeconfig)
+        
+        #logging.info("ApeControl: MPC profile/configvars %s", self.profile)
 
         self.state_ambient_temp = AMBIENT_TEMP
 
@@ -247,6 +371,10 @@ class ControlMPC(BaseController):
         )
         # derived quantities
         self._update_filament_const()
+
+    def _make_configvars_local(self, configobject):
+        """Add config variables to the local namespace"""
+        self.__dict__.update(configobject.__dict__) # does the same as the function below but 'cleaner'
 
     def _load_profile(self):
         """Load constants from a profile dictionary.

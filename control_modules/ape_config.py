@@ -24,8 +24,8 @@ class ApeConfig:
         
     # Add ConfigVar methods
     def add_configvars_local(self, configobject):
-        """Add config variables to the local ApeConfig namespace"""
-        self.__dict__.update(configobject.__dict__)
+        """Add config variables to the local namespace"""
+        self.__dict__.update(configobject.__dict__) # does the same as the function below but 'cleaner'
         
     def add_configvars_ff(self, configobject):
         """Add config variables to the ApeConfig.ff namespace"""
