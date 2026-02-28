@@ -32,8 +32,8 @@ class PIDControl(BaseController):
         self.config_params = apeconfig
 
         self.temp_integ_max = 0.
-        if self.config_params.Ki:
-            self.temp_integ_max = self.config_params.max_power / self.config_params.Ki
+        if self.config_params.fb.Ki:
+            self.temp_integ_max = self.config_params.fb.max_power / self.config_params.fb.Ki
         self.prev_temp = AMBIENT_TEMP
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
@@ -42,15 +42,15 @@ class PIDControl(BaseController):
     def temperature_update(self, read_time, temp, target_temp):
         time_diff = read_time - self.prev_temp_time
         temp_diff = temp - self.prev_temp
-        if time_diff >= self.config_params.min_deriv_time:
+        if time_diff >= self.config_params.fb.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:
-            temp_deriv = (self.prev_temp_deriv * (self.config_params.min_deriv_time - time_diff) + temp_diff) / self.config_params.min_deriv_time
+            temp_deriv = (self.prev_temp_deriv * (self.config_params.fb.min_deriv_time - time_diff) + temp_diff) / self.config_params.fb.min_deriv_time
         temp_err = target_temp - temp
         temp_integ = self.prev_temp_integ + temp_err * time_diff
         temp_integ = max(0., min(self.temp_integ_max, temp_integ))
-        self.co = self.config_params.Kp * temp_err + self.config_params.Ki * temp_integ - self.config_params.Kd * temp_deriv
-        bounded_co = max(0., min(self.config_params.max_power, self.co))
+        self.co = self.config_params.fb.Kp * temp_err + self.config_params.fb.Ki * temp_integ - self.config_params.fb.Kd * temp_deriv
+        bounded_co = max(0., min(self.config_params.fb.max_power, self.co))
         # Set PWM output (assumes heater object is accessible via self.printer)
         self.set_pwm(read_time, bounded_co)
         # optional self.heater.set_pwm(read_time, bounded_co)

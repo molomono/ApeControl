@@ -33,7 +33,7 @@ class ApeControl:
         elif self.algo == 'pid':
             from .control_modules.pid_control import PIDControl, PIDConfig
             self.apeconfig = ApeConfig(config)
-            self.apeconfig.add_configvars_local(PIDConfig(config))
+            self.apeconfig.add_configvars_fb(PIDConfig(config))
             logging.info("ApeControl: PID config loaded")
             self.ControllerClass = PIDControl
             logging.info("ApeControl: PID object found")

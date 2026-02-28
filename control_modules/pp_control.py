@@ -30,9 +30,6 @@ class PPConfig:
         self.t_delta_regulate = config.getfloat('t_delta_regulate', 10.0)
         self.min_regulation_duration = config.getfloat('min_duration', 10.0) # Minimum duration to stay in a state before transitioning (prevents chatter)
 
-        # On off switch for feed-back control
-        self.fb_enable = config.getboolean('fb_enable', True)
-
         # Min derivative time, for computing temp velocity
         self.min_deriv_time = config.getfloat('deriv_time', 2., above=0.)
 
@@ -61,10 +58,15 @@ class PPControl(BaseController):
             "coast_down": self._state_coast_down
         }
 
+        if self.config_params.fb is not None:
+            self.fb_enable = True
+        else: 
+            self.fb_enable = False
+
         if self.fb_enable:
             self.fb_pwm = 0.0
             from .pid_control import PIDControl
-            self.feedback_controller = PIDControl(config)
+            self.feedback_controller = PIDControl(apeconfig)
             self.feedback_controller.set_pwm = lambda read_time, value: setattr(self, 'fb_pwm', value)   
 
     def temperature_update(self, read_time, temp, target_temp):
