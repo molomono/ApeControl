@@ -142,7 +142,8 @@ class ControlMPC(BaseController):
         
         #self._load_config_variables(config)
         #self.profile = self.get_profile()
-        self._make_configvars_local(apeconfig)
+        self.add_configvars_local = apeconfig.add_configvars_local
+        self.add_configvars_local(apeconfig)
         
         #logging.info("ApeControl: MPC profile/configvars %s", self.profile)
 
@@ -162,7 +163,6 @@ class ControlMPC(BaseController):
         if not register:
             return
         
-        #self.heater_name = config.get_name().split()[-1]
         gcode = self.printer.lookup_object("gcode")
         gcode.register_mux_command(
             "MPC_CALIBRATE",
@@ -372,9 +372,9 @@ class ControlMPC(BaseController):
         # derived quantities
         self._update_filament_const()
 
-    def _make_configvars_local(self, configobject):
-        """Add config variables to the local namespace"""
-        self.__dict__.update(configobject.__dict__) # does the same as the function below but 'cleaner'
+    #def _make_configvars_local(self, configobject):
+    #    """Add config variables to the local namespace"""
+    #    self.__dict__.update(configobject.__dict__) # does the same as the function below but 'cleaner'
 
     def _load_profile(self):
         """Load constants from a profile dictionary.
