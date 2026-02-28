@@ -24,7 +24,9 @@ class ApeControl:
         elif self.algo == 'pid':
             from .control_modules.pid_control import PIDControl, PIDConfig
             self.apeconfig = ApeConfig(config, PIDConfig)
+            logging.info("ApeControl: PID config loaded")
             self.ControllerClass = PIDControl
+            logging.info("ApeControl: PID object found")
         elif self.algo == 'mpc':
             from .control_modules.mpc_control import ControlMPC
             self.new_controller = ControlMPC(config)
@@ -38,7 +40,9 @@ class ApeControl:
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(self.name)
+            logging.info("ApeControl: Heater object found")
             self.new_controller = self.ControllerClass(None, self.apeconfig)
+            logging.info("ApeControl: Controller built")
             self.old_control = heater.set_control(self.new_controller) # exchange control objects
             try:
                 self.new_controller.post_init() # if there is a post_init script run it now
