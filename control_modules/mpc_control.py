@@ -180,13 +180,10 @@ class ControlMPC(BaseController):
             self.cmd_MPC_SET,
             desc=self.cmd_MPC_SET_help,
         )
-        # Non mux version
-        #gcode.register_command('MPC_CALIBRATE', self.cmd_MPC_CALIBRATE, # might need to change this to a mux function later
-        #                       desc=self.cmd_MPC_CALIBRATE_help)
 
-    def post_init(self, load_clean=False, register=True):
-        self.handle_ready()
-        self.heater_max_power = self.heater.get_max_power() * self.const_heater_power
+    #def post_init(self, load_clean=False, register=True):
+    #    self.handle_ready()
+        self.heater_max_power = self.max_power * self.const_heater_power # self.max_power from apeconfig, const_heater_power from MPCconfig
 
         self.want_ambient_refresh = self.ambient_sensor is not None
         self.state_block_temp = (
@@ -724,6 +721,8 @@ class MpcCalibrate:
 
             #new_control = ControlMPC(profile, self.heater, False, False)
             ## TODO: I'm sure this can be improved upon
+
+            # I'll need to readress this part, instead of retreiving orig_control.config i need to construct a apeconfig and pass it.
             new_control = ControlMPC(self.orig_control.config, False, False)
             new_control.post_init(False, False) # Post init script Must be run after initializing ControlMPC -- dirty but it works
 

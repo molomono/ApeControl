@@ -26,9 +26,6 @@ class ApeControl:
             self.apeconfig.add_configvars_ff(PPConfig(config))
             logging.info("ApeControl: PID config loaded")
             self.apeconfig.add_configvars_fb(PIDConfig(config))
-            #logging.info("ApeControl: PP object found")
-            #self.ControllerClass = PPControl
-
         elif self.algo == 'pid':
             from .control_modules.pid_control import PIDConfig
             self.apeconfig = ApeConfig(config)
@@ -40,7 +37,6 @@ class ApeControl:
             from .control_modules.mpc_control import MPCConfig
             self.apeconfig = ApeConfig(config)
             self.apeconfig.add_configvars_local(MPCConfig(config))
-            #self.new_controller = ControlMPC(config)
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
         

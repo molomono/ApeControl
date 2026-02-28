@@ -27,7 +27,7 @@
 
 ## 2.B Tests and validation 
 - [ ] Ensure that the control fallback works
-- [ ] Ensure that thermal runaway still is triggered
+- [x] Ensure that thermal runaway still is triggered
 - [x] Test the custom Calibration algorithm --> will it run
 - [x] Test the custom Calibration algorithm --> How is the performance
 
@@ -53,7 +53,7 @@
     - [x] MPC from kalico ported over -- (calibration works, required monkeypatch of heater.wait_while function, heater.get_status['power'] is in ratio not wattage --> fixed in calibration script)
     - [x] Removed the "profile" object used to initate the class, passing standard config instead. --> This might be worth revisiting. Making profile support optional
 - [ ] Add a look-ahead class which tracks arbitrary states. Such as future fan control speeds, temperature and flow rate.
-- [ ] HIGH PRIORITY: Look at the timing of object_lookups in the controller objects. I want to get rid of the necessity to run a post_init script.
+- [x] HIGH PRIORITY: Look at the timing of object_lookups in the controller objects. I want to get rid of the necessity to run a post_init script.
     - MPC kalico implementation does this with a if toolhead is None: object_lookup['toolhead'] type structure. Both post-init and try if none seem like sub optimal ways to handle this. --> after some research it might be solveable using a "Lazy Property Pattern" @property def heater(self): if self._heater is None: self._heater = printer.lookup_object("heater_name"); return self._heater --> the heater method behaves like an attribute which self-initializes if value is None. 
     Alternitavely 3.8+ python with functools has the cached_property decorator which simplifies implementation:
     @cached_property
