@@ -49,7 +49,10 @@ class BaseController(ABC):
 
     def set_pwm(self, read_time, value):
         """Set pwm class, can be overwriten for things like AutoTune classes"""
-        self.heater.set_pwm(read_time, value)
+        if self.heater is None:
+            logging.info("ApeControl: heater object is not yet instanciated, skipping set_pwm...")
+        else:
+            self.heater.set_pwm(read_time, value)
 
     @property
     def heater(self):
