@@ -186,9 +186,10 @@ class ControlMPC(BaseController):
         self.heater_max_power = self.max_power * self.const_heater_power # self.max_power from apeconfig, const_heater_power from MPCconfig
 
         self.want_ambient_refresh = self.ambient_sensor is not None
-        self.state_block_temp = (
-            AMBIENT_TEMP if load_clean else self._heater_temp()
-        )
+        #self.state_block_temp = (
+        #    AMBIENT_TEMP if load_clean else self._heater_temp()
+        #)
+        self.state_block_temp = AMBIENT_TEMP # the above heater_temp call is such a pain in the ass and i'm not even sure it does anything useful.
         self.state_sensor_temp = self.state_block_temp
         
 
