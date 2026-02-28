@@ -6,7 +6,6 @@
 import logging 
 from .control_modules.ape_config import ApeConfig
 
-
 class ApeControl:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -52,7 +51,8 @@ class ApeControl:
         try:
             heater = pheaters.lookup_heater(self.name)
             logging.info("ApeControl: Heater object found")
-            self.new_controller = self.ControllerClass(self.apeconfig)
+            #self.new_controller = self.ControllerClass(self.apeconfig)
+            self.new_controller = self.apeconfig.construct_controller(self.algo)
             logging.info("ApeControl: Controller built")
             self.old_control = heater.set_control(self.new_controller) # exchange control objects
             try:

@@ -1,3 +1,15 @@
+# At the very top of your ape_control.py
+from .pp_control import PPControl
+from .pid_control import PIDControl
+from .mpc_control import ControlMPC
+
+# The Registry
+ALGO_MAP = {
+    "pp": PPControl,
+    "pid": PIDControl,
+    "mpc": ControlMPC
+}
+
 class ApeConfig:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -6,9 +18,11 @@ class ApeConfig:
         self.max_power = config.getfloat('max_power', 1.0)
         self.algorithm = config.get('control', 'pid')
         
-        # This will hold the specialized config (e.g., PPConfig)
-        # It merges the attributes in the ConfigObject with this classes namespace
-
+        # FeedForward and FeedBack namespaces
+        self.ff = None
+        self.fb = None
+        
+    # Add ConfigVar methods
     def add_configvars_local(self, configobject):
         """Add config variables to the local ApeConfig namespace"""
         self.__dict__.update(configobject.__dict__)
@@ -20,3 +34,17 @@ class ApeConfig:
     def add_configvars_fb(self, configobject):
         """Add config variables to the ApeConfig.fb namespace"""
         self.fb = configobject
+
+    def construct_controller(self, algorithm = None):
+        """Construct Control Object from current parameters"""
+        if algorithm is None:
+            ControllerClass = ALGO_MAP.get(self.algorithm)
+        else:
+            ControllerClass = ALGO_MAP.get(algorithm)
+
+        if ControllerClass is None:
+            raise self.printer.config_error(
+                f"ApeControl: Algorithm '{self.algorithm}' not recognized. "
+                f"Available: {list(ALGO_MAP.keys())}")
+        
+        return ControllerClass(self)
