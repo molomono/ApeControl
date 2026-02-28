@@ -52,8 +52,8 @@ class BaseController(ABC):
         if self.heater is None:
             logging.info("ApeControl: heater  %s is not yet instanciated, skipping set_pwm...", self.heater_name)
             self.heater # try to reload the property
-        else:
-            self.heater.set_pwm(read_time, value)
+            return
+        self.heater.set_pwm(read_time, value)
 
     @property
     def heater(self):
