@@ -35,6 +35,7 @@ class ApeConfig:
         """Add config variables to the ApeConfig.fb namespace"""
         self.fb = configobject
 
+    # Constructor fo loaded control algos
     def construct_controller(self, algorithm = None):
         """Construct Control Object from current parameters"""
         if algorithm is None:

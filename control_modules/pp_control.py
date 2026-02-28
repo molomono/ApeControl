@@ -65,8 +65,7 @@ class PPControl(BaseController):
 
         if self.fb_enable:
             self.fb_pwm = 0.0
-            from .pid_control import PIDControl
-            self.feedback_controller = PIDControl(apeconfig)
+            self.feedback_controller = self.config_params.construct_controller('pid')
             self.feedback_controller.set_pwm = lambda read_time, value: setattr(self, 'fb_pwm', value)   
 
     def temperature_update(self, read_time, temp, target_temp):
