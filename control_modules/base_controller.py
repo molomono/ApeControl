@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 class BaseController(ABC):
     def __init__(self, config):
         self.target_temp = None
-        if config:
+        if config is not None:
             self.printer = config.get_printer()
             self.heater_name = config.get_name().split()[-1]
             # Universal config parameters

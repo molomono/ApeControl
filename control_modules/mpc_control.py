@@ -59,10 +59,8 @@ class ControlMPC(BaseController):
 
     #def post_init(self, load_clean=False, register=True):
     #    self.handle_ready()
-    #    self.heater_max_power = self.heater.get_max_power() * self.const_heater_power
-
+        self.max_power = self.heater.get_max_power() * self.const_heater_power
         self.want_ambient_refresh = self.ambient_sensor is not None
-        self.heater
         self.state_block_temp = (
             AMBIENT_TEMP if load_clean else self._heater_temp()
         )

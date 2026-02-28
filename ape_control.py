@@ -11,6 +11,7 @@ class ApeControl:
         self.name = config.get_name().split()[-1] # (heater) name
         self.algo = config.get('control', 'pid_control')
         self.old_control = None
+        self.new_controller = None
 
         self.printer.register_event_handler("klippy:ready", self.controller_lookup)
 
@@ -31,11 +32,7 @@ class ApeControl:
         else:
             logging.error("Unknown architecture type specified: %s. Defaulting to original Klipper Control algorithm.", self.algo)
         
-        #self.exchange_controller()
-    
-
-    #def exchange_controller(self):
-        # load objects
+        # Following lookups are becoming obsolete
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(self.name)
