@@ -32,8 +32,8 @@ class BaseController(ABC):
         self.heater_name = old_ape_controller.heater_name
         self.max_power = old_ape_controller.max_power
         # Protected Attributes
-        self._heater = old_ape_controller._toolhead
-        self._toolhead = old_ape_controller._heater
+        self._heater = old_ape_controller._heater
+        self._toolhead = old_ape_controller._toolhead
         self._gcode = old_ape_controller._gcode
         self._part_fan = old_ape_controller._part_fan
         self._reactor = old_ape_controller._reactor
