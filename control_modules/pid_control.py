@@ -33,7 +33,7 @@ class PIDControl(BaseController):
 
         self.temp_integ_max = 0.
         if self.config_params.fb.Ki:
-            self.temp_integ_max = self.config_params.fb.max_power / self.config_params.fb.Ki
+            self.temp_integ_max = self.config_params.max_power / self.config_params.fb.Ki
         self.prev_temp = AMBIENT_TEMP
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
@@ -50,7 +50,7 @@ class PIDControl(BaseController):
         temp_integ = self.prev_temp_integ + temp_err * time_diff
         temp_integ = max(0., min(self.temp_integ_max, temp_integ))
         self.co = self.config_params.fb.Kp * temp_err + self.config_params.fb.Ki * temp_integ - self.config_params.fb.Kd * temp_deriv
-        bounded_co = max(0., min(self.config_params.fb.max_power, self.co))
+        bounded_co = max(0., min(self.config_params.max_power, self.co))
         # Set PWM output (assumes heater object is accessible via self.printer)
         self.set_pwm(read_time, bounded_co)
         # optional self.heater.set_pwm(read_time, bounded_co)
