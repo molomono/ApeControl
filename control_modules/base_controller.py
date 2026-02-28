@@ -10,16 +10,17 @@ class BaseController(ABC):
     def __init__(self, apeconfig):
         self.config_params = apeconfig
         self.printer = apeconfig.printer # This is a bit of an inefficiency still
-        self.target_temp = None
-        #self.printer.register_event_handler("klippy:ready", self.handle_ready)
-
-    #def handle_ready(self):
-        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.config_params.heater_name)
-        self.gcode = self.printer.lookup_object('gcode')
-        # Useful objects for proactive power compensation control logic
-        self.part_fan = self.printer.lookup_object('fan')
-        self.gcode_move = self.printer.lookup_object('gcode_move')
         self.reactor = self.printer.get_reactor()
+        self.target_temp = None
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+
+    def handle_ready(self):
+        # Load Critical objects
+        self.heater = self.printer.lookup_object('heaters').lookup_heater(self.config_params.heater_name)
+        #self.gcode = self.printer.lookup_object('gcode')
+        #self.part_fan = self.printer.lookup_object('fan')
+        #self.gcode_move = self.printer.lookup_object('gcode_move')
+        
 
     @abstractmethod
     def temperature_update(self, read_time, temp, target_temp):
